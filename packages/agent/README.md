@@ -1,0 +1,141 @@
+# @an-sdk/agent
+
+Define AI agents with full type inference. The config layer for [AN](https://an.dev).
+
+## Install
+
+```bash
+npm install @an-sdk/agent zod
+```
+
+## Quick Start
+
+Create `src/agent.ts`:
+
+```ts
+import { agent, tool } from "@an-sdk/agent"
+import { z } from "zod"
+
+export default agent({
+  model: "claude-sonnet-4-6",
+  systemPrompt: "You are a helpful coding assistant.",
+  tools: {
+    greet: tool({
+      description: "Greet a user by name",
+      inputSchema: z.object({ name: z.string() }),
+      execute: async ({ name }) => ({
+        content: [{ type: "text", text: `Hello, ${name}!` }],
+      }),
+    }),
+  },
+})
+```
+
+Then deploy with the [AN CLI](https://www.npmjs.com/package/@an-sdk/cli):
+
+```bash
+npx @an-sdk/cli login
+npx @an-sdk/cli deploy
+```
+
+## API
+
+### `agent(config)`
+
+Creates an agent configuration. Returns the config with a `_type: "agent"` tag for the runtime.
+
+```ts
+export default agent({
+  // Model to use (default: "claude-sonnet-4-6")
+  model: "claude-sonnet-4-6",
+
+  // System prompt for the agent
+  systemPrompt: "You are a PR reviewer...",
+
+  // Custom tools the agent can use
+  tools: {
+    lint: tool({ ... }),
+    test: tool({ ... }),
+  },
+
+  // Runtime: "claude-code" (default) or "codex"
+  runtime: "claude-code",
+
+  // Permission mode: "default", "acceptEdits", or "bypassPermissions"
+  permissionMode: "default",
+
+  // Max turns before stopping (default: 50)
+  maxTurns: 50,
+
+  // Max budget in USD
+  maxBudgetUsd: 5,
+
+  // Lifecycle hooks
+  onStart: async () => { ... },
+  onToolCall: async ({ toolName, input }) => { ... },
+  onToolResult: async ({ toolName, input, output }) => { ... },
+  onStepFinish: async ({ step }) => { ... },
+  onFinish: async ({ result }) => { ... },
+  onError: async ({ error }) => { ... },
+})
+```
+
+### `tool(definition)`
+
+Creates a tool definition with Zod schema validation.
+
+```ts
+import { tool } from "@an-sdk/agent"
+import { z } from "zod"
+
+const myTool = tool({
+  description: "What this tool does",
+  inputSchema: z.object({
+    path: z.string(),
+    verbose: z.boolean().optional(),
+  }),
+  execute: async (args) => {
+    // args is fully typed from the schema
+    return {
+      content: [{ type: "text", text: "result" }],
+    }
+  },
+})
+```
+
+### Hooks
+
+#### `onToolCall`
+
+Runs before a tool executes. Return `false` to block it.
+
+```ts
+onToolCall: async ({ toolName, input }) => {
+  if (toolName === "Bash" && input.command?.includes("rm -rf")) {
+    return false // blocked
+  }
+}
+```
+
+#### `onFinish`
+
+Runs when the agent completes successfully.
+
+```ts
+onFinish: async ({ result }) => {
+  await fetch("https://my-api.com/webhook", {
+    method: "POST",
+    body: JSON.stringify({ done: true }),
+  })
+}
+```
+
+## How It Works
+
+`agent()` and `tool()` are identity functions — they return exactly what you pass in, with type inference added. The actual execution happens in the AN runtime (E2B sandbox) using the Claude Agent SDK.
+
+Your code runs in a secure cloud sandbox with full access to Node.js, git, and system tools.
+
+## License
+
+MIT
