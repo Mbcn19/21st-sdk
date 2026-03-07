@@ -2,12 +2,12 @@
 
 ## 1. Get an API Key
 
-Sign up at [an.dev](https://an.dev) and get your API key from [an.dev/agents/dashboard/api](https://an.dev/agents/dashboard/api).
+Sign up at [21st.dev/agents](https://21st.dev/agents) and get your API key from [the dashboard](https://21st.dev/agents/dashboard/api).
 
 ## 2. Install
 
 ```bash
-npm install @an-sdk/agent zod
+npm install @21st-sdk/agent zod
 ```
 
 ## 3. Define Your Agent
@@ -15,7 +15,7 @@ npm install @an-sdk/agent zod
 Create `src/agent.ts`:
 
 ```ts
-import { agent, tool } from "@an-sdk/agent"
+import { agent, tool } from "@21st-sdk/agent"
 import { z } from "zod"
 
 export default agent({
@@ -36,10 +36,10 @@ export default agent({
 ## 4. Login & Deploy
 
 ```bash
-npx @an-sdk/cli login
+npx @21st-sdk/cli login
 # Enter your API key: an_sk_...
 
-npx @an-sdk/cli deploy
+npx @21st-sdk/cli deploy
 # Bundling src/agent.ts...
 # Deploying my-agent...
 # https://api.an.dev/v1/chat/my-agent
@@ -50,17 +50,17 @@ Your agent is live.
 ## 5. Embed in a React App
 
 ```bash
-npm install @an-sdk/nextjs @an-sdk/react ai @ai-sdk/react
+npm install @21st-sdk/nextjs @21st-sdk/react ai @ai-sdk/react
 ```
 
 Create a token route (keeps your API key on the server):
 
 ```ts
-// app/api/an/token/route.ts
-import { createAnTokenHandler } from "@an-sdk/nextjs/server"
+// app/api/agent/token/route.ts
+import { createTokenHandler } from "@21st-sdk/nextjs/server"
 
-export const POST = createAnTokenHandler({
-  apiKey: process.env.AN_API_KEY!,
+export const POST = createTokenHandler({
+  apiKey: process.env.API_KEY_21ST!,
 })
 ```
 
@@ -71,15 +71,15 @@ Add the chat UI:
 "use client"
 
 import { useChat } from "@ai-sdk/react"
-import { AnAgentChat, createAnChat } from "@an-sdk/nextjs"
-import "@an-sdk/react/styles.css"
+import { AgentChat, createAgentChat } from "@21st-sdk/nextjs"
+import "@21st-sdk/react/styles.css"
 import { useMemo } from "react"
 
 export default function Chat() {
   const chat = useMemo(
-    () => createAnChat({
+    () => createAgentChat({
       agent: "your-agent-slug",
-      tokenUrl: "/api/an/token",
+      tokenUrl: "/api/agent/token",
     }),
     [],
   )
@@ -87,7 +87,7 @@ export default function Chat() {
   const { messages, sendMessage, status, stop, error } = useChat({ chat })
 
   return (
-    <AnAgentChat
+    <AgentChat
       messages={messages}
       onSend={(msg) =>
         sendMessage({ parts: [{ type: "text", text: msg.content }] })

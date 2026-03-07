@@ -1,4 +1,4 @@
-import type { AnTheme } from "./types"
+import type { ChatTheme } from "./types"
 import { contrastText } from "./utils/contrast"
 
 export type ResolvedColorMode = "light" | "dark"
@@ -16,7 +16,7 @@ export function resolveColorMode(
 /** Apply theme CSS variables from playground JSON to a DOM element */
 export function applyTheme(
   element: HTMLElement,
-  theme: AnTheme,
+  theme: ChatTheme,
   colorMode: "light" | "dark" | "auto" = "auto",
 ) {
   // Apply shared vars

@@ -71,6 +71,20 @@ export const toolRegistry: Record<string, ToolMeta> = {
     },
     variant: "simple",
   },
+  // Agent tool — renamed from "Task" in claude-agent-sdk 0.2.63+
+  "tool-Agent": {
+    icon: Sparkles,
+    title: (part) => {
+      const isPending = part.state !== "output-available" && part.state !== "output-error"
+      const subagentType = part.input?.subagent_type || "Agent"
+      return isPending ? `Running ${subagentType}` : `${subagentType} completed`
+    },
+    subtitle: (part) => {
+      const desc = part.input?.description || ""
+      return desc.length > 50 ? desc.slice(0, 47) + "..." : desc
+    },
+    variant: "simple",
+  },
   "tool-Grep": {
     icon: Search,
     title: (part) => {

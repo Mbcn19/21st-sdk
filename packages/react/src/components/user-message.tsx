@@ -26,6 +26,9 @@ export const UserMessage = memo(function UserMessage({
     if ((part as any).type === "image") {
       images.push((part as any).url || (part as any).image)
     }
+    if ((part as any).type === "data-image" && (part as any).data?.url) {
+      images.push((part as any).data.url)
+    }
   }
   if ((message as any).experimental_attachments) {
     for (const att of (message as any).experimental_attachments) {

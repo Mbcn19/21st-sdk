@@ -1,6 +1,6 @@
 import { Chat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
-import type { CreateAnChatOptions } from "./types"
+import type { CreateAgentChatOptions } from "./types"
 
 const DEFAULT_API_URL = "https://relay.an.dev"
 
@@ -29,8 +29,8 @@ function createTokenFetcher(tokenUrl: string, agent: string) {
   }
 }
 
-/** Create an AI SDK Chat instance pointed at the AN Relay API */
-export function createAnChat(options: CreateAnChatOptions): Chat<UIMessage> {
+/** Create an AI SDK Chat instance pointed at the relay API */
+export function createAgentChat(options: CreateAgentChatOptions): Chat<UIMessage> {
   const {
     agent,
     tokenUrl,
@@ -44,7 +44,7 @@ export function createAnChat(options: CreateAnChatOptions): Chat<UIMessage> {
 
   const getToken = getTokenFn || (tokenUrl ? createTokenFetcher(tokenUrl, agent) : null)
   if (!getToken) {
-    throw new Error("createAnChat: provide either tokenUrl or getToken")
+    throw new Error("createAgentChat: provide either tokenUrl or getToken")
   }
 
   return new Chat({
@@ -64,3 +64,6 @@ export function createAnChat(options: CreateAnChatOptions): Chat<UIMessage> {
     onError,
   })
 }
+
+// Legacy factory alias kept for compatibility.
+export const createAnChat = createAgentChat

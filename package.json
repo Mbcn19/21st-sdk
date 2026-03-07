@@ -1,10 +1,10 @@
 {
-  "name": "an-sdk",
+  "name": "21st-sdk",
   "private": true,
   "description": "The open-source SDK for building, deploying, and embedding AI coding agents.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/21st-dev/an-sdk.git"
+    "url": "https://github.com/21st-dev/21st-sdk.git"
   },
   "license": "MIT",
   "scripts": {

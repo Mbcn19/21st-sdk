@@ -1,6 +1,6 @@
 import type {
-  AnClientConfig,
-  AnApiError,
+  AgentClientConfig,
+  ApiError,
   CreateSandboxParams,
   Sandbox,
   SandboxDetail,
@@ -8,6 +8,8 @@ import type {
   ListThreadsParams,
   GetThreadParams,
   DeleteThreadParams,
+  RunThreadParams,
+  RunThreadResult,
   Thread,
   ThreadSummary,
   CreateTokenParams,
@@ -23,7 +25,7 @@ import type {
 
 const DEFAULT_BASE_URL = "https://relay.an.dev"
 
-export class AnClient {
+export class AgentClient {
   private readonly apiKey: string
   private readonly baseUrl: string
 
@@ -31,7 +33,7 @@ export class AnClient {
   readonly threads: ThreadsResource
   readonly tokens: TokensResource
 
-  constructor(config: AnClientConfig) {
+  constructor(config: AgentClientConfig) {
     this.apiKey = config.apiKey
     this.baseUrl = (config.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, "")
     this.sandboxes = new SandboxesResource(this)
@@ -40,7 +42,7 @@ export class AnClient {
   }
 
   /** @internal */
-  async _fetch<T>(path: string, init?: RequestInit): Promise<T> {
+  async _request(path: string, init?: RequestInit): Promise<Response> {
     const url = `${this.baseUrl}${path}`
     const res = await fetch(url, {
       ...init,
@@ -52,18 +54,30 @@ export class AnClient {
     })
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { error?: AnApiError }
+      const body = await res.json().catch(() => ({})) as { error?: ApiError }
       const msg = body.error?.message ?? `Request failed: ${res.status}`
       throw new Error(msg)
     }
 
+    return res
+  }
+
+  /** @internal */
+  async _fetch<T>(path: string, init?: RequestInit): Promise<T> {
+    const res = await this._request(path, init)
+
     if (res.status === 204) return undefined as T
     return res.json() as Promise<T>
+  }
+
+  /** @internal */
+  _getBaseUrl(): string {
+    return this.baseUrl
   }
 }
 
 class FilesResource {
-  constructor(private client: AnClient) {}
+  constructor(private client: AgentClient) {}
 
   async write(params: WriteFilesParams): Promise<void> {
     return this.client._fetch<void>(`/v1/sandboxes/${params.sandboxId}/files`, {
@@ -81,7 +95,7 @@ class FilesResource {
 }
 
 class GitResource {
-  constructor(private client: AnClient) {}
+  constructor(private client: AgentClient) {}
 
   async clone(params: GitCloneParams): Promise<GitCloneResult> {
     return this.client._fetch<GitCloneResult>(`/v1/sandboxes/${params.sandboxId}/git/clone`, {
@@ -100,7 +114,7 @@ class SandboxesResource {
   readonly files: FilesResource
   readonly git: GitResource
 
-  constructor(private client: AnClient) {
+  constructor(private client: AgentClient) {
     this.files = new FilesResource(client)
     this.git = new GitResource(client)
   }
@@ -141,7 +155,7 @@ class SandboxesResource {
 }
 
 class ThreadsResource {
-  constructor(private client: AnClient) {}
+  constructor(private client: AgentClient) {}
 
   async list(params: ListThreadsParams): Promise<ThreadSummary[]> {
     return this.client._fetch<ThreadSummary[]>(
@@ -171,10 +185,37 @@ class ThreadsResource {
       { method: "DELETE" },
     )
   }
+
+  async run(params: RunThreadParams): Promise<RunThreadResult> {
+    if (params.threadId && !params.sandboxId) {
+      throw new Error("threadId requires sandboxId")
+    }
+
+    const encodedAgent = encodeURIComponent(params.agent)
+    const sandboxId = params.sandboxId
+      ?? (await this.client.sandboxes.create({ agent: params.agent })).id
+    const threadId = params.threadId
+      ?? (await this.create({ sandboxId, name: params.name })).id
+    const response = await this.client._request(`/v1/chat/${encodedAgent}`, {
+      method: "POST",
+      body: JSON.stringify({
+        messages: params.messages,
+        sandboxId,
+        threadId,
+      }),
+    })
+
+    return {
+      sandboxId,
+      threadId,
+      response,
+      resumeUrl: `${this.client._getBaseUrl()}/v1/chat/${encodedAgent}/${sandboxId}/stream`,
+    }
+  }
 }
 
 class TokensResource {
-  constructor(private client: AnClient) {}
+  constructor(private client: AgentClient) {}
 
   async create(params: CreateTokenParams = {}): Promise<Token> {
     return this.client._fetch<Token>("/v1/tokens", {
@@ -187,3 +228,6 @@ class TokensResource {
     })
   }
 }
+
+// Legacy client alias kept for compatibility.
+export const AnClient = AgentClient

@@ -1,5 +1,6 @@
 import React, { memo, useState, useCallback, useRef, useEffect } from "react"
 import type { ChatStatus } from "ai"
+import type { ModelOption } from "../types"
 import { cn } from "../utils/cn"
 import { useThemeConfig } from "../theme-config"
 import { SendButtonUnified } from "./input/send-button"
@@ -29,7 +30,7 @@ interface InputBarProps {
 
   // Model selector
   modelSelector?: {
-    models: { id: string; name: string; version?: string }[]
+    models: ModelOption[]
     activeModelId?: string
     onModelChange?: (id: string) => void
     display?: "popover" | "badge"
@@ -110,11 +111,32 @@ export const InputBar = memo(function InputBar({
   // Mode selector visibility from config
   const hasModes = (modeSelector?.modes?.length ?? 0) > 1
 
-  // Calculate inner radius for toolbar buttons
-  const outerRadius = 12
+  // Calculate inner radius for toolbar buttons based on container's actual border-radius.
+  // The container uses `var(--an-input-border-radius)` which is set by applyTheme() on .an-root.
+  // We observe .an-root for style changes so innerRadius updates when the theme changes.
+  const containerElRef = useRef<HTMLDivElement>(null)
+  const [outerRadius, setOuterRadius] = useState(16) // match CSS default
   const toolbarGap = 8
   const minButtonRadius = 6
   const innerRadius = outerRadius > 0 ? Math.max(minButtonRadius, outerRadius - toolbarGap) : 0
+
+  useEffect(() => {
+    const el = containerElRef.current
+    if (!el) return
+    const readRadius = () => {
+      const computed = getComputedStyle(el)
+      const raw = computed.borderRadius
+      const r = parseFloat(raw)
+      if (!isNaN(r)) setOuterRadius(r)
+    }
+    requestAnimationFrame(readRadius)
+    const anRoot = el.closest(".an-root")
+    if (anRoot) {
+      const observer = new MutationObserver(() => requestAnimationFrame(readRadius))
+      observer.observe(anRoot, { attributes: true, attributeFilter: ["style"] })
+      return () => observer.disconnect()
+    }
+  }, [])
 
   // Auto-resize textarea
   useEffect(() => {
@@ -165,8 +187,9 @@ export const InputBar = memo(function InputBar({
     <div className={cn("an-input-bar shrink-0 px-3 pb-3", className)}>
       <div className="mx-auto" style={{ maxWidth: "var(--an-max-width, 420px)" }}>
         <div
+          ref={containerElRef}
           className={`${containerClass} cursor-text transition-[border-color,box-shadow] duration-150 ${isDragOver ? "ring-2 ring-primary/50 border-primary/50" : ""}`}
-          style={{ borderRadius: "var(--an-input-border-radius, 12px)" }}
+          style={{ borderRadius: "var(--an-input-border-radius, 16px)" }}
           onClick={handleContainerClick}
         >
           {/* Context items (attached images/files) */}

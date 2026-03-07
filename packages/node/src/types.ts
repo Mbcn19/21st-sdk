@@ -1,6 +1,6 @@
 // ─── Client config ──────────────────────────────────────────
 
-export interface AnClientConfig {
+export interface AgentClientConfig {
   apiKey: string
   baseUrl?: string
 }
@@ -58,6 +58,32 @@ export interface GetThreadParams {
 export interface DeleteThreadParams {
   sandboxId: string
   threadId: string
+}
+
+export interface RunThreadMessagePart {
+  type: string
+  [key: string]: unknown
+}
+
+export interface RunThreadMessage {
+  id?: string
+  role: string
+  parts: RunThreadMessagePart[]
+}
+
+export interface RunThreadParams {
+  agent: string
+  messages: RunThreadMessage[]
+  sandboxId?: string
+  threadId?: string
+  name?: string
+}
+
+export interface RunThreadResult {
+  sandboxId: string
+  threadId: string
+  response: Response
+  resumeUrl: string
 }
 
 export interface Thread {
@@ -131,7 +157,11 @@ export interface GitCloneResult {
 
 // ─── Error types ────────────────────────────────────────────
 
-export interface AnApiError {
+export interface ApiError {
   code: string
   message: string
 }
+
+// Legacy type aliases kept for compatibility.
+export type AnClientConfig = AgentClientConfig
+export type AnApiError = ApiError

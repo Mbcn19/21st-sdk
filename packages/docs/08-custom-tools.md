@@ -1,6 +1,6 @@
 # Custom Tool Renderers
 
-The `@an-sdk/react` chat UI automatically renders tool calls from your agent. It includes built-in renderers for all standard Claude tools and supports custom renderers for your own tools.
+The `@21st-sdk/react` chat UI automatically renders tool calls from your agent. It includes built-in renderers for all standard Claude tools and supports custom renderers for your own tools.
 
 ## Built-in Tool Renderers
 
@@ -24,8 +24,8 @@ These are rendered automatically when your agent uses standard tools:
 To render your custom tools differently, use the `slots.ToolRenderer` prop:
 
 ```tsx
-import { AnAgentChat, ToolRenderer } from "@an-sdk/react"
-import type { ToolPart } from "@an-sdk/react"
+import { AgentChat, ToolRenderer } from "@21st-sdk/react"
+import type { ToolPart } from "@21st-sdk/react"
 
 function MyToolRenderer(props: { part: ToolPart; status: string }) {
   const { part, status } = props
@@ -49,7 +49,7 @@ function MyToolRenderer(props: { part: ToolPart; status: string }) {
   return <ToolRenderer part={part} status={status} />
 }
 
-<AnAgentChat
+<AgentChat
   slots={{ ToolRenderer: MyToolRenderer }}
   // ... other props
 />

@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from "react"
-import type { AnTheme } from "./types"
+import type { ChatTheme } from "./types"
 
-export interface AnThemeConfig {
+export interface ChatThemeConfig {
   messageStyle: "bubble-right" | "full-width"
   messageDensity: "relaxed" | "compact" | "dense"
   inputStyle: "rounded" | "flat" | "bordered"
@@ -31,7 +31,10 @@ export interface AnThemeConfig {
   attachmentPreviewStyle: "thumbnail" | "chip" | "hidden"
 }
 
-export const DEFAULT_THEME_CONFIG: AnThemeConfig = {
+// Legacy type alias kept for compatibility.
+export type AnThemeConfig = ChatThemeConfig
+
+export const DEFAULT_THEME_CONFIG: ChatThemeConfig = {
   messageStyle: "bubble-right",
   messageDensity: "relaxed",
   inputStyle: "bordered",
@@ -95,7 +98,7 @@ function readEnum<T extends string>(
   return fallback
 }
 
-export function extractThemeConfig(theme?: AnTheme): AnThemeConfig {
+export function extractThemeConfig(theme?: ChatTheme): ChatThemeConfig {
   if (!theme?.theme) return DEFAULT_THEME_CONFIG
   const t = theme.theme
 
@@ -130,8 +133,8 @@ export function extractThemeConfig(theme?: AnTheme): AnThemeConfig {
   }
 }
 
-export const ThemeConfigContext = createContext<AnThemeConfig>(DEFAULT_THEME_CONFIG)
+export const ThemeConfigContext = createContext<ChatThemeConfig>(DEFAULT_THEME_CONFIG)
 
-export function useThemeConfig(): AnThemeConfig {
+export function useThemeConfig(): ChatThemeConfig {
   return useContext(ThemeConfigContext)
 }

@@ -1,6 +1,6 @@
 import { ImageThumbInput } from "./image-thumb-input"
 import { FileChip } from "./file-chip"
-import type { AnThemeConfig } from "../../theme-config"
+import type { ChatThemeConfig } from "../../theme-config"
 
 export interface AttachedImage {
   id: string
@@ -18,7 +18,7 @@ export interface AttachedFile {
 interface ContextItemsProps {
   images: AttachedImage[]
   files: AttachedFile[]
-  previewStyle: AnThemeConfig["attachmentPreviewStyle"]
+  previewStyle: ChatThemeConfig["attachmentPreviewStyle"]
   innerRadius?: number
   onRemoveImage?: (id: string) => void
   onRemoveFile?: (id: string) => void

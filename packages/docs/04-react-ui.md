@@ -1,11 +1,11 @@
 # React UI
 
-`@an-sdk/react` provides a full chat UI for AN agents. Built on [Vercel AI SDK v5](https://sdk.vercel.ai) — uses standard `useChat()` from `@ai-sdk/react`.
+`@21st-sdk/react` provides a full chat UI for AN agents. Built on [Vercel AI SDK v5](https://sdk.vercel.ai) — uses standard `useChat()` from `@ai-sdk/react`.
 
 ## Install
 
 ```bash
-npm install @an-sdk/react ai @ai-sdk/react
+npm install @21st-sdk/react ai @ai-sdk/react
 ```
 
 ## Basic Usage
@@ -14,13 +14,13 @@ npm install @an-sdk/react ai @ai-sdk/react
 "use client"
 
 import { useChat } from "@ai-sdk/react"
-import { AnAgentChat, createAnChat } from "@an-sdk/react"
-import "@an-sdk/react/styles.css"
+import { AgentChat, createAgentChat } from "@21st-sdk/react"
+import "@21st-sdk/react/styles.css"
 import { useMemo } from "react"
 
 export default function Chat() {
   const chat = useMemo(
-    () => createAnChat({
+    () => createAgentChat({
       agent: "your-agent-slug",
       getToken: async () => "your_an_sk_token",
     }),
@@ -30,7 +30,7 @@ export default function Chat() {
   const { messages, sendMessage, status, stop, error } = useChat({ chat })
 
   return (
-    <AnAgentChat
+    <AgentChat
       messages={messages}
       onSend={(msg) =>
         sendMessage({ parts: [{ type: "text", text: msg.content }] })
@@ -43,12 +43,12 @@ export default function Chat() {
 }
 ```
 
-## `createAnChat(options)`
+## `createAgentChat(options)`
 
 Creates an AI SDK `Chat` instance pointed at the AN Relay.
 
 ```ts
-createAnChat({
+createAgentChat({
   agent: string              // Agent slug from dashboard
   getToken: () => Promise<string>  // Returns an_sk_ key or JWT
   apiUrl?: string            // Default: "https://relay.an.dev"
@@ -60,7 +60,7 @@ createAnChat({
 
 For Next.js apps, use `tokenUrl` instead of `getToken` — see [Next.js Integration](./05-nextjs.md).
 
-## `<AnAgentChat />` Props
+## `<AgentChat />` Props
 
 | Prop | Type | Description |
 |------|------|-------------|
@@ -69,10 +69,10 @@ For Next.js apps, use `tokenUrl` instead of `getToken` — see [Next.js Integrat
 | `status` | `ChatStatus` | `"ready" \| "submitted" \| "streaming" \| "error"` |
 | `onStop` | `() => void` | Stop generation |
 | `error` | `Error` | Error to display |
-| `theme` | `AnTheme` | Theme from playground |
+| `theme` | `ChatTheme` | Theme from playground |
 | `colorMode` | `"light" \| "dark" \| "auto"` | Color mode |
-| `classNames` | `Partial<AnClassNames>` | Per-element CSS overrides |
-| `slots` | `Partial<AnSlots>` | Component swapping |
+| `classNames` | `Partial<ChatClassNames>` | Per-element CSS overrides |
+| `slots` | `Partial<ChatSlots>` | Component swapping |
 | `className` | `string` | Root element class |
 | `style` | `CSSProperties` | Root element style |
 
@@ -82,16 +82,16 @@ Four levels, from simple to full control:
 
 ### 1. Theme tokens
 
-Apply a theme JSON from the [AN Playground](https://an.dev/an/playground):
+Apply a theme JSON from the [AN Playground](https://21st.dev/agents/playground):
 
 ```tsx
-<AnAgentChat theme={playgroundTheme} colorMode="dark" />
+<AgentChat theme={playgroundTheme} colorMode="dark" />
 ```
 
 ### 2. Class overrides
 
 ```tsx
-<AnAgentChat
+<AgentChat
   classNames={{
     root: "rounded-2xl border",
     messageList: "px-8",
@@ -106,7 +106,7 @@ Apply a theme JSON from the [AN Playground](https://an.dev/an/playground):
 Swap sub-components:
 
 ```tsx
-<AnAgentChat
+<AgentChat
   slots={{
     InputBar: MyCustomInput,
     UserMessage: MyUserBubble,
@@ -118,7 +118,7 @@ Swap sub-components:
 ### 4. Individual component imports
 
 ```tsx
-import { MessageList, InputBar, ToolRenderer } from "@an-sdk/react"
+import { MessageList, InputBar, ToolRenderer } from "@21st-sdk/react"
 ```
 
 ## CSS
@@ -126,7 +126,7 @@ import { MessageList, InputBar, ToolRenderer } from "@an-sdk/react"
 Import once in your app:
 
 ```tsx
-import "@an-sdk/react/styles.css"
+import "@21st-sdk/react/styles.css"
 ```
 
 No Tailwind peer dependency — CSS is pre-compiled. All elements have stable `an-*` class names:
@@ -145,7 +145,7 @@ No Tailwind peer dependency — CSS is pre-compiled. All elements have stable `a
 ## Theme Type
 
 ```ts
-interface AnTheme {
+interface ChatTheme {
   theme: Record<string, string>  // Shared: font, spacing, accent
   light: Record<string, string>  // Light mode CSS vars
   dark: Record<string, string>   // Dark mode CSS vars

@@ -1,9 +1,9 @@
 {
-  "name": "@an-sdk/agent",
-  "version": "0.0.4",
+  "name": "@21st-sdk/agent",
+  "version": "0.0.6",
   "license": "MIT",
-  "description": "Define AI agents and tools with full type inference — the config layer for AN",
-  "homepage": "https://an.dev",
+  "description": "Define AI agents and tools with full type inference for 21st Agents",
+  "homepage": "https://21st.dev/agents",
   "publishConfig": {
     "access": "public"
   },
@@ -39,8 +39,8 @@
     "ai",
     "agent",
     "tools",
-    "an",
-    "an.dev",
+    "21st",
+    "21st.dev",
     "sdk",
     "claude",
     "codex"

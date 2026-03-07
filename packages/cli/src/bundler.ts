@@ -7,7 +7,7 @@ export async function findAgentEntryPoints(): Promise<AgentEntryPoint[]> {
   const { join, basename, extname } = await import("path")
 
   if (!existsSync("agents") || !statSync("agents").isDirectory()) {
-    throw new Error("No agents/ directory found. See https://an.dev/docs to get started.")
+    throw new Error("No agents/ directory found. See https://21st.dev/agents/docs to get started.")
   }
 
   const entries: AgentEntryPoint[] = []
@@ -34,7 +34,7 @@ export async function findAgentEntryPoints(): Promise<AgentEntryPoint[]> {
   }
 
   if (entries.length === 0) {
-    throw new Error("No agents found in agents/ directory. See https://an.dev/docs to get started.")
+    throw new Error("No agents found in agents/ directory. See https://21st.dev/agents/docs to get started.")
   }
 
   return entries
@@ -48,7 +48,7 @@ export async function bundleAgent(entryPoint: string): Promise<Buffer> {
     target: "node22",
     format: "esm",
     write: false,
-    external: ["@an-sdk/agent"],
+    external: ["@21st-sdk/agent"],
     minify: true,
     sourcemap: false,
   })
@@ -66,7 +66,7 @@ async function importBundle(bundle: Buffer): Promise<Record<string, unknown> | n
   const { writeFileSync, unlinkSync, mkdirSync } = await import("fs")
   const { join } = await import("path")
 
-  // Write to .an-tmp/ in cwd so ESM can resolve @an-sdk/agent from node_modules
+  // Write to .an-tmp/ in cwd so ESM can resolve @21st-sdk/agent from node_modules
   const tmpDir = join(process.cwd(), ".an-tmp")
   mkdirSync(tmpDir, { recursive: true })
   const tmpPath = join(tmpDir, `an-bundle-${Date.now()}.mjs`)

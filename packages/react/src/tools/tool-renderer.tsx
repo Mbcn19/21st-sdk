@@ -49,6 +49,7 @@ export const ToolRenderer = memo(function ToolRenderer({ part, chatStatus, toolR
     case "tool-TodoWrite":
       return <TodoTool part={part} chatStatus={chatStatus} />
     case "tool-Task":
+    case "tool-Agent":
       return <TaskTool part={part} chatStatus={chatStatus} />
     case "tool-Thinking":
       if (config.thinkingDisplay === "hidden") return null

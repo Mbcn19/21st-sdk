@@ -8,7 +8,7 @@ AN is a platform for building, deploying, and embedding AI agents. You define an
 Your Code (agent.ts)
     |
     v
-an deploy (CLI)
+@21st-sdk/cli deploy (CLI)
     |
     v
 AN Platform
@@ -30,11 +30,11 @@ AN Platform
 
 | Package | Purpose |
 |---------|---------|
-| `@an-sdk/agent` | Define agents and tools with type inference |
-| `@an-sdk/cli` | Deploy agents from your terminal |
-| `@an-sdk/react` | Chat UI components (theming, tool renderers) |
-| `@an-sdk/nextjs` | Next.js server-side token handler |
-| `@an-sdk/node` | Server-side SDK (sandboxes, threads, tokens) |
+| `@21st-sdk/agent` | Define agents and tools with type inference |
+| `@21st-sdk/cli` | Deploy agents from your terminal |
+| `@21st-sdk/react` | Chat UI components (theming, tool renderers) |
+| `@21st-sdk/nextjs` | Next.js server-side token handler |
+| `@21st-sdk/node` | Server-side SDK (sandboxes, threads, tokens) |
 
 ## Key Concepts
 
@@ -58,4 +58,4 @@ Two layers of authentication:
 1. **Client -> Relay**: API key (`an_sk_...`) or short-lived JWT (via token exchange)
 2. **Sandbox -> AI Provider**: Handled internally by the platform (Claude Proxy)
 
-For web apps, use `@an-sdk/nextjs` to exchange your API key for a short-lived JWT on the server, so the key never reaches the browser.
+For web apps, use `@21st-sdk/nextjs` to exchange your API key for a short-lived JWT on the server, so the key never reaches the browser.

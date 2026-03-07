@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import type { ModelOption } from "../../types"
 import { ChevronDown } from "../../icons/tool-icons"
 import { PopoverShell } from "./popover-shell"
 
@@ -8,7 +9,7 @@ export function ModelPopover({
   onModelChange,
   innerRadius,
 }: {
-  models: { id: string; name: string; version?: string }[]
+  models: ModelOption[]
   activeModelId?: string
   onModelChange?: (id: string) => void
   innerRadius?: number
@@ -62,7 +63,7 @@ export function ModelBadge({
   activeModelId,
   innerRadius,
 }: {
-  models: { id: string; name: string; version?: string }[]
+  models: ModelOption[]
   activeModelId?: string
   innerRadius?: number
 }) {

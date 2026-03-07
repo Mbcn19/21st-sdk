@@ -1,42 +1,42 @@
 # Node SDK
 
-`@an-sdk/node` is a server-side client for the AN API. Use it to manage sandboxes, threads, and tokens programmatically.
+`@21st-sdk/node` is a server-side client for the AN API. Use it to manage sandboxes, threads, and tokens programmatically.
 
 ## Install
 
 ```bash
-npm install @an-sdk/node
+npm install @21st-sdk/node
 ```
 
 ## Quick Start
 
 ```ts
-import { AnClient } from "@an-sdk/node"
+import { AgentClient } from "@21st-sdk/node"
 
-const an = new AnClient({
-  apiKey: process.env.AN_API_KEY!, // an_sk_...
+const client = new AgentClient({
+  apiKey: process.env.API_KEY_21ST!, // an_sk_...
 })
 
 // Create a sandbox for your agent
-const sandbox = await an.sandboxes.create({ agent: "my-agent" })
+const sandbox = await client.sandboxes.create({ agent: "my-agent" })
 
 // Create a thread
-const thread = await an.threads.create({
+const thread = await client.threads.create({
   sandboxId: sandbox.sandboxId,
   name: "Review PR #42",
 })
 
 // Generate a short-lived token for browser clients
-const { token, expiresAt } = await an.tokens.create({
+const { token, expiresAt } = await client.tokens.create({
   agent: "my-agent",
   expiresIn: "1h",
 })
 ```
 
-## `AnClient`
+## `AgentClient`
 
 ```ts
-new AnClient({
+new AgentClient({
   apiKey: string     // Your an_sk_ API key
   baseUrl?: string   // Default: "https://relay.an.dev"
 })

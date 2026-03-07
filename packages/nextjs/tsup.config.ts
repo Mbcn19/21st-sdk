@@ -9,5 +9,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: true,
-  external: ["react", "react-dom", "next", "@an-sdk/react"],
+  external: ["react", "react-dom", "next", "@21st-sdk/react"],
 })

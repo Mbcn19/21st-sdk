@@ -1,8 +1,8 @@
 import * as p from "@clack/prompts"
-import { getApiKey, saveApiKey } from "./config.js"
+import { getApiBaseUrl, getApiKey, saveApiKey } from "./config.js"
 import { isInteractive } from "./detect.js"
 
-const API_BASE = process.env.AN_API_URL || "https://an.dev/api/v1"
+const API_BASE = getApiBaseUrl()
 
 async function verifyKey(apiKey: string): Promise<{ user: any; team: any }> {
   const res = await fetch(`${API_BASE}/me`, {
@@ -25,7 +25,7 @@ export async function login(opts?: { apiKey?: string }) {
       console.log(`Authenticated as ${user.displayName || user.email} (team: ${team.name})`)
       console.log("Key saved to ~/.an/credentials")
     } catch {
-      console.error("Error: Invalid API key. Get a new one at https://an.dev/api-keys")
+      console.error("Error: Invalid API key. Get a new one at https://21st.dev/agents/api-keys")
       process.exit(1)
     }
     return
@@ -33,19 +33,19 @@ export async function login(opts?: { apiKey?: string }) {
 
   // Non-interactive without key: can't prompt
   if (!isInteractive()) {
-    console.error("Error: No API key provided. Use --api-key KEY or set AN_API_KEY env var.")
-    console.error("Get your API key at https://an.dev/api-keys")
+    console.error("Error: No API key provided. Use --api-key KEY or set API_KEY_21ST.")
+    console.error("Get your API key at https://21st.dev/agents/api-keys")
     process.exit(1)
   }
 
   // Interactive flow
-  p.intro("an login")
+  p.intro("@21st-sdk/cli login")
 
   const existing = getApiKey()
   if (existing) {
     p.log.info("Already logged in. Continuing will re-authenticate.")
   }
-  p.log.info("Get your API key at https://an.dev/api-keys")
+  p.log.info("Get your API key at https://21st.dev/agents/api-keys")
 
   const apiKey = await p.text({
     message: "Enter your API key",
@@ -71,7 +71,7 @@ export async function login(opts?: { apiKey?: string }) {
     p.outro("Done")
   } catch {
     s.stop("Invalid API key")
-    p.log.error("Invalid API key. Get a new one at https://an.dev/api-keys")
+    p.log.error("Invalid API key. Get a new one at https://21st.dev/agents/api-keys")
     process.exit(1)
   }
 }

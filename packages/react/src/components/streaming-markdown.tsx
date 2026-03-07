@@ -111,8 +111,6 @@ export const StreamingMarkdown = memo(function StreamingMarkdown({
   className,
   textContrast = "normal",
 }: StreamingMarkdownProps) {
-  const textOpacity = textContrast === "high" ? 0.9 : 0.7
-
   const components = useMemo(
     () => ({
       h1: ({ children, ...props }: any) => (
@@ -128,16 +126,16 @@ export const StreamingMarkdown = memo(function StreamingMarkdown({
         <h4 className="an-md-h4 text-sm font-medium mt-2 mb-1" {...props}>{children}</h4>
       ),
       p: ({ children, ...props }: any) => (
-        <p className="an-md-p text-sm leading-relaxed" style={{ color: "var(--an-foreground, inherit)", opacity: textOpacity }} {...props}>{children}</p>
+        <p className="an-md-p text-sm leading-relaxed" style={{ color: "color-mix(in srgb, var(--an-foreground) 80%, transparent)" }} {...props}>{children}</p>
       ),
       ul: ({ children, ...props }: any) => (
-        <ul className="an-md-ul list-disc list-outside space-y-0.5 text-sm mb-2 pl-4" style={{ opacity: textOpacity }} {...props}>{children}</ul>
+        <ul className="an-md-ul list-disc list-outside space-y-0.5 text-sm mb-2 pl-4" style={{ color: "color-mix(in srgb, var(--an-foreground) 80%, transparent)" }} {...props}>{children}</ul>
       ),
       ol: ({ children, ...props }: any) => (
-        <ol className="an-md-ol list-decimal list-outside space-y-0.5 text-sm mb-2 pl-5" style={{ opacity: textOpacity }} {...props}>{children}</ol>
+        <ol className="an-md-ol list-decimal list-outside space-y-0.5 text-sm mb-2 pl-5" style={{ color: "color-mix(in srgb, var(--an-foreground) 80%, transparent)" }} {...props}>{children}</ol>
       ),
       li: ({ children, ...props }: any) => (
-        <li className="an-md-li text-sm pl-0.5" style={{ opacity: textOpacity }} {...props}>{children}</li>
+        <li className="an-md-li text-sm pl-0.5" style={{ color: "color-mix(in srgb, var(--an-foreground) 80%, transparent)" }} {...props}>{children}</li>
       ),
       strong: ({ children, ...props }: any) => (
         <strong className="font-medium" style={{ color: "var(--an-foreground)" }} {...props}>{children}</strong>
@@ -161,7 +159,7 @@ export const StreamingMarkdown = memo(function StreamingMarkdown({
       blockquote: ({ children, ...props }: any) => (
         <blockquote
           className="an-md-blockquote pl-3 italic mb-2 text-sm"
-          style={{ borderLeft: "2px solid var(--an-border-color)", opacity: 0.6 }}
+          style={{ borderLeft: "2px solid var(--an-border-color)", color: "color-mix(in srgb, var(--an-foreground) 70%, transparent)" }}
           {...props}
         >
           {children}
@@ -179,7 +177,7 @@ export const StreamingMarkdown = memo(function StreamingMarkdown({
         <th className="text-left font-medium px-3 py-2" style={{ background: "var(--an-background-secondary)" }} {...props}>{children}</th>
       ),
       td: ({ children, ...props }: any) => (
-        <td className="px-3 py-2" style={{ borderTop: "1px solid var(--an-border-color)", opacity: 0.8 }} {...props}>{children}</td>
+        <td className="px-3 py-2" style={{ borderTop: "1px solid var(--an-border-color)", color: "color-mix(in srgb, var(--an-foreground) 80%, transparent)" }} {...props}>{children}</td>
       ),
       pre: ({ children }: any) => <>{children}</>,
       code: ({ inline, className: codeClassName, children, ...props }: any) => {
@@ -208,7 +206,7 @@ export const StreamingMarkdown = memo(function StreamingMarkdown({
         )
       },
     }),
-    [textOpacity],
+    [],
   )
 
   return (

@@ -74,7 +74,7 @@ export function ToolRowBase({
             )}
           </span>
           {detail && (
-            <span className="text-foreground/20 font-normal truncate min-w-0">{detail}</span>
+            <span className="font-normal truncate min-w-0" style={{ color: "color-mix(in srgb, var(--an-foreground-muted) 60%, transparent)" }}>{detail}</span>
           )}
           {trailingContent}
         </div>

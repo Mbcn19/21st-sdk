@@ -1,11 +1,11 @@
-# @an-sdk/agent
+# @21st-sdk/agent
 
-Define AI agents with full type inference. The config layer for [AN](https://an.dev).
+Define AI agents with full type inference. The config layer for [21st Agents](https://21st.dev/agents).
 
 ## Install
 
 ```bash
-npm install @an-sdk/agent zod
+npm install @21st-sdk/agent zod
 ```
 
 ## Quick Start
@@ -13,7 +13,7 @@ npm install @an-sdk/agent zod
 Create `src/agent.ts`:
 
 ```ts
-import { agent, tool } from "@an-sdk/agent"
+import { agent, tool } from "@21st-sdk/agent"
 import { z } from "zod"
 
 export default agent({
@@ -31,11 +31,11 @@ export default agent({
 })
 ```
 
-Then deploy with the [AN CLI](https://www.npmjs.com/package/@an-sdk/cli):
+Then deploy with the [21st SDK CLI](https://www.npmjs.com/package/@21st-sdk/cli):
 
 ```bash
-npx @an-sdk/cli login
-npx @an-sdk/cli deploy
+npx @21st-sdk/cli login
+npx @21st-sdk/cli deploy
 ```
 
 ## API
@@ -85,7 +85,7 @@ export default agent({
 Creates a tool definition with Zod schema validation.
 
 ```ts
-import { tool } from "@an-sdk/agent"
+import { tool } from "@21st-sdk/agent"
 import { z } from "zod"
 
 const myTool = tool({
@@ -132,7 +132,7 @@ onFinish: async ({ result }) => {
 
 ## How It Works
 
-`agent()` and `tool()` are identity functions — they return exactly what you pass in, with type inference added. The actual execution happens in the AN runtime (E2B sandbox) using the Claude Agent SDK.
+`agent()` and `tool()` are identity functions — they return exactly what you pass in, with type inference added. The actual execution happens in the 21st Agents runtime (E2B sandbox) using the Claude Agent SDK.
 
 Your code runs in a secure cloud sandbox with full access to Node.js, git, and system tools.
 

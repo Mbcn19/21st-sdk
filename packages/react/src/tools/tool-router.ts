@@ -1,9 +1,9 @@
 import type { TimelineStep, StepState } from "../types/timeline"
 import type { ToolSize } from "../types/tool-styles"
-import type { AnThemeConfig } from "../theme-config"
+import type { ChatThemeConfig } from "../theme-config"
 import React from "react"
 
-export function resolveToolSize(config: AnThemeConfig): ToolSize {
+export function resolveToolSize(config: ChatThemeConfig): ToolSize {
   return config.toolCallStyle === "compact" ? "compact" : "normal"
 }
 
@@ -16,7 +16,7 @@ function routeToolCall(
   step: Extract<TimelineStep, { type: "tool-call" }>,
   state: StepState,
   onComplete: () => void,
-  config: AnThemeConfig,
+  config: ChatThemeConfig,
   actionIndex: number,
 ): React.ReactNode {
   // Lazy imports to prevent circular dependency issues

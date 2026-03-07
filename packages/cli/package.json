@@ -1,7 +1,10 @@
 {
-  "name": "@an-sdk/cli",
-  "version": "0.0.11",
-  "description": "AN CLI — deploy AI agents",
+  "name": "@21st-sdk/cli",
+  "version": "0.0.15",
+  "description": "CLI for deploying AI agents to 21st Agents",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "bin": {
     "an": "dist/index.js"

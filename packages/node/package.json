@@ -1,9 +1,9 @@
 {
-  "name": "@an-sdk/node",
-  "version": "0.0.2",
+  "name": "@21st-sdk/node",
+  "version": "0.0.4",
   "license": "MIT",
-  "description": "Server-side Node.js SDK for AN — sandbox management, thread CRUD, and token exchange",
-  "homepage": "https://an.dev",
+  "description": "Server-side Node.js SDK for 21st Agents",
+  "homepage": "https://21st.dev/agents",
   "publishConfig": {
     "access": "public"
   },
@@ -39,8 +39,8 @@
     "ai",
     "agent",
     "sandbox",
-    "an",
-    "an.dev",
+    "21st",
+    "21st.dev",
     "sdk",
     "node"
   ],

@@ -1,8 +1,8 @@
 // Main drop-in component
-export { AnAgentChat } from "./an-agent-chat"
+export { AgentChat, AnAgentChat } from "./an-agent-chat"
 
 // Chat factory
-export { createAnChat } from "./create-an-chat"
+export { createAgentChat, createAnChat } from "./create-an-chat"
 
 // Theme
 export { applyTheme } from "./theme"
@@ -70,16 +70,27 @@ export { SourceIcon } from "./icons/source-icons"
 export { FileExtIcon } from "./icons/file-ext-icon"
 export { PaperclipIcon } from "./icons/shared-icons"
 
+// Models
+export { CLAUDE_MODELS, DEFAULT_MODEL_ID, AN_CLAUDE_MODELS, AN_DEFAULT_MODEL_ID } from "./models"
+export type { ClaudeModelId, AnClaudeModelId } from "./models"
+
 // Types
 export type {
+  ChatTheme,
+  ChatClassNames,
+  ChatSlots,
+  ModelOption,
+  CreateAgentChatOptions,
+  AgentChatProps,
   AnTheme,
   AnClassNames,
   AnSlots,
+  AnModelOption,
   CreateAnChatOptions,
   AnAgentChatProps,
   CustomToolRendererProps,
 } from "./types"
-export type { AnThemeConfig } from "./theme-config"
+export type { ChatThemeConfig, AnThemeConfig } from "./theme-config"
 export type { TimelineStep, StepState } from "./types/timeline"
 export type { ToolSize } from "./types/tool-styles"
 export type { SourceType } from "./icons/source-icons"

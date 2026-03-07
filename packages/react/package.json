@@ -1,9 +1,9 @@
 {
-  "name": "@an-sdk/react",
-  "version": "0.1.0",
+  "name": "@21st-sdk/react",
+  "version": "0.1.4",
   "license": "MIT",
-  "description": "React components for AN AI agent chat UIs — drop-in chat, tool renderers, and theming",
-  "homepage": "https://an.dev",
+  "description": "React components for 21st Agents chat UIs",
+  "homepage": "https://21st.dev/agents",
   "publishConfig": {
     "access": "public"
   },
@@ -22,11 +22,13 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./styles/index.css": "./styles/index.css"
   },
   "files": [
     "dist",
     "docs/**/*",
+    "styles",
     "src",
     "!src/**/*.test.ts",
     "AGENTS.md",
@@ -42,12 +44,14 @@
     "agent",
     "chat",
     "ai-sdk",
-    "an",
-    "an.dev",
+    "21st",
+    "21st.dev",
     "components",
     "ui"
   ],
-  "sideEffects": ["./dist/styles.css"],
+  "sideEffects": [
+    "./dist/styles.css"
+  ],
   "scripts": {
     "prepack": "cp -r ../docs ./docs",
     "postpack": "rm -rf ./docs",

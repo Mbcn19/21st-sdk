@@ -1,13 +1,13 @@
-# @an-sdk/react
+# @21st-sdk/react
 
-React components for building AI agent chat UIs powered by [AN](https://an.dev). Drop-in chat interface with tool renderers, theming, and full customization.
+React components for building AI agent chat UIs powered by [21st Agents](https://21st.dev/agents). Drop-in chat interface with tool renderers, theming, and full customization.
 
 Built on [Vercel AI SDK v5](https://sdk.vercel.ai) — no custom hooks or state management. Just components.
 
 ## Install
 
 ```bash
-npm install @an-sdk/react ai @ai-sdk/react
+npm install @21st-sdk/react ai @ai-sdk/react
 ```
 
 ## Quick Start
@@ -16,14 +16,14 @@ npm install @an-sdk/react ai @ai-sdk/react
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { AnAgentChat, createAnChat } from "@an-sdk/react";
-import "@an-sdk/react/styles.css";
+import { AgentChat, createAgentChat } from "@21st-sdk/react";
+import "@21st-sdk/react/styles.css";
 import { useMemo } from "react";
 
 export default function Chat() {
   const chat = useMemo(
     () =>
-      createAnChat({
+      createAgentChat({
         agent: "your-agent-slug",
         getToken: async () => "your_an_sk_token",
       }),
@@ -33,7 +33,7 @@ export default function Chat() {
   const { messages, sendMessage, status, stop, error } = useChat({ chat });
 
   return (
-    <AnAgentChat
+    <AgentChat
       messages={messages}
       onSend={(msg) =>
         sendMessage({
@@ -48,7 +48,7 @@ export default function Chat() {
 }
 ```
 
-That's it. You get a full chat UI with message rendering, tool visualization, auto-scroll, and streaming — all wired to your AN agent.
+That's it. You get a full chat UI with message rendering, tool visualization, auto-scroll, and streaming — all wired to your deployed agent.
 
 ## Customization
 
@@ -56,10 +56,10 @@ Four levels of customization, from simple to full control:
 
 ### 1. Theme tokens
 
-Apply a theme JSON from the [AN Playground](https://an.dev/an/playground):
+Apply a theme JSON from the [Playground](https://21st.dev/agents/playground):
 
 ```tsx
-<AnAgentChat theme={playgroundTheme} colorMode="dark" />
+<AgentChat theme={playgroundTheme} colorMode="dark" />
 ```
 
 ### 2. Class overrides
@@ -67,7 +67,7 @@ Apply a theme JSON from the [AN Playground](https://an.dev/an/playground):
 Override styles per element:
 
 ```tsx
-<AnAgentChat
+<AgentChat
   classNames={{
     root: "rounded-2xl border",
     messageList: "px-8",
@@ -82,7 +82,7 @@ Override styles per element:
 Swap sub-components entirely:
 
 ```tsx
-<AnAgentChat
+<AgentChat
   slots={{
     InputBar: MyCustomInput,
     UserMessage: MyUserBubble,
@@ -96,7 +96,7 @@ Swap sub-components entirely:
 Build from scratch with individual imports:
 
 ```tsx
-import { MessageList, InputBar, ToolRenderer } from "@an-sdk/react";
+import { MessageList, InputBar, ToolRenderer } from "@21st-sdk/react";
 ```
 
 ## CSS
@@ -104,7 +104,7 @@ import { MessageList, InputBar, ToolRenderer } from "@an-sdk/react";
 Import the stylesheet once in your app:
 
 ```tsx
-import "@an-sdk/react/styles.css";
+import "@21st-sdk/react/styles.css";
 ```
 
 No Tailwind peer dependency required — CSS is pre-compiled. All elements have stable `an-*` class names for custom styling:
@@ -123,12 +123,12 @@ No Tailwind peer dependency required — CSS is pre-compiled. All elements have 
 
 ## API Reference
 
-### `createAnChat(options)`
+### `createAgentChat(options)`
 
-Creates an AI SDK `Chat` instance pointed at the AN Relay API.
+Creates an AI SDK `Chat` instance pointed at the relay API.
 
 ```ts
-createAnChat({
+createAgentChat({
   agent: string;           // Agent slug from your dashboard
   getToken: () => Promise<string>;  // Returns your an_sk_ API key
   apiUrl?: string;         // Default: "https://relay.an.dev"
@@ -140,7 +140,7 @@ createAnChat({
 
 Returns a standard `Chat<UIMessage>` — pass it to `useChat({ chat })`.
 
-### `<AnAgentChat />`
+### `<AgentChat />`
 
 Drop-in chat component.
 
@@ -151,12 +151,14 @@ Drop-in chat component.
 | `status` | `ChatStatus` | `"ready" \| "submitted" \| "streaming" \| "error"` |
 | `onStop` | `() => void` | Stop generation |
 | `error` | `Error` | Error to display |
-| `theme` | `AnTheme` | Theme from playground |
+| `theme` | `ChatTheme` | Theme from playground |
 | `colorMode` | `"light" \| "dark" \| "auto"` | Color mode |
-| `classNames` | `Partial<AnClassNames>` | Per-element CSS overrides |
-| `slots` | `Partial<AnSlots>` | Component swapping |
+| `classNames` | `Partial<ChatClassNames>` | Per-element CSS overrides |
+| `slots` | `Partial<ChatSlots>` | Component swapping |
 | `className` | `string` | Root element class |
 | `style` | `CSSProperties` | Root element style |
+| `modelSelector` | `{ models, activeModelId?, onModelChange? }` | Model picker (for custom backends) |
+| `attachments` | `{ onAttach?, images?, files? }` | File attachment support |
 
 ### `applyTheme(element, theme, colorMode?)`
 
@@ -192,12 +194,23 @@ Manually inject CSS variables from a playground theme JSON.
 ## Theme Type
 
 ```ts
-interface AnTheme {
+interface ChatTheme {
   theme: Record<string, string>;  // Shared: font, spacing, accent
   light: Record<string, string>;  // Light mode CSS vars
   dark: Record<string, string>;   // Dark mode CSS vars
 }
 ```
+
+## Model Selection
+
+The SDK exports pre-defined model constants for convenience:
+
+```ts
+import { CLAUDE_MODELS, DEFAULT_MODEL_ID } from "@21st-sdk/react"
+import type { ModelOption, ClaudeModelId } from "@21st-sdk/react"
+```
+
+> **Note:** When using `createAgentChat()` with the relay, the model is set server-side in the agent config. The `modelSelector` prop is for building UIs with custom backends.
 
 ## License
 

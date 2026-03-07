@@ -1,21 +1,21 @@
-# @an-sdk/cli
+# @21st-sdk/cli
 
-Deploy AI agents to [AN](https://an.dev) from your terminal.
+Deploy AI agents to [21st Agents](https://21st.dev/agents) from your terminal.
 
 ## Quick Start
 
 ```bash
-# 1. Login with your API key (get one at an.dev)
-npx @an-sdk/cli login
+# 1. Login with your API key (get one at https://21st.dev/agents/api-keys)
+npx @21st-sdk/cli login
 
 # 2. Create your agent
-npm init -y && npm install @an-sdk/agent zod
+npm init -y && npm install @21st-sdk/agent zod
 ```
 
 Create `src/agent.ts`:
 
 ```ts
-import { agent, tool } from "@an-sdk/agent"
+import { agent, tool } from "@21st-sdk/agent"
 import { z } from "zod"
 
 export default agent({
@@ -35,7 +35,7 @@ export default agent({
 
 ```bash
 # 3. Deploy
-npx @an-sdk/cli deploy
+npx @21st-sdk/cli deploy
 ```
 
 That's it. Your agent is live.
@@ -44,10 +44,10 @@ That's it. Your agent is live.
 
 ### `an login`
 
-Authenticate with the AN platform.
+Authenticate with your API key.
 
 ```bash
-npx @an-sdk/cli login
+npx @21st-sdk/cli login
 # Enter your API key: an_sk_...
 # Authenticated as John (team: my-team)
 ```
@@ -59,7 +59,7 @@ Your key is saved to `~/.an/credentials`.
 Bundle and deploy your agent.
 
 ```bash
-npx @an-sdk/cli deploy
+npx @21st-sdk/cli deploy
 # Bundling src/agent.ts...
 # Bundled (12.3kb)
 # Deploying my-agent...
@@ -89,7 +89,7 @@ After first deploy, the CLI saves `.an/project.json` in your project directory. 
 
 ## Environment Variables
 
-`AN_API_URL` — Override the API endpoint (default: `https://an.dev/api/v1`)
+`API_URL_21ST` — Override the API endpoint (default: `https://an.dev/api/v1`)
 
 ## License
 

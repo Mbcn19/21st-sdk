@@ -46,7 +46,7 @@ export async function exchangeToken(options: ExchangeTokenOptions) {
 }
 
 /** Create a Next.js API route handler that exchanges an_sk_ keys for JWTs */
-export function createAnTokenHandler(options: TokenHandlerOptions) {
+export function createTokenHandler(options: TokenHandlerOptions) {
   return async function POST(req: Request) {
     try {
       const body = await req.json().catch(() => ({}))
@@ -60,3 +60,6 @@ export function createAnTokenHandler(options: TokenHandlerOptions) {
     }
   }
 }
+
+// Legacy handler alias kept for compatibility.
+export const createAnTokenHandler = createTokenHandler

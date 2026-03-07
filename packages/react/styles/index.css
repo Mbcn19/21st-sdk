@@ -18,12 +18,12 @@
   --an-font-weight-medium: 500;
   --an-font-weight-semibold: 600;
 
-  /* Geometry */
+  /* Geometry — all radii derive from --an-border-radius */
   --an-border-radius: 16px;
-  --an-message-border-radius: 16px;
-  --an-input-border-radius: 16px;
-  --an-tool-border-radius: 12px;
-  --an-code-border-radius: 8px;
+  --an-message-border-radius: var(--an-border-radius);
+  --an-input-border-radius: var(--an-border-radius);
+  --an-tool-border-radius: var(--an-border-radius);
+  --an-code-border-radius: var(--an-border-radius);
 
   /* Layout — --an-message-gap is intentionally unset; density config provides the default */
   --an-user-message-padding: 10px 14px;

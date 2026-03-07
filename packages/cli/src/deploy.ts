@@ -1,19 +1,23 @@
-import { getApiKey } from "./config.js"
+import {
+  getApiBaseUrl,
+  getApiKey,
+  getAppBaseUrl,
+} from "./config.js"
 import { findAgentEntryPoints, bundleAgent, extractSandboxConfig, extractAgentMetadata } from "./bundler.js"
 import { existsSync } from "fs"
 import { join } from "path"
 import * as p from "@clack/prompts"
 
-const API_BASE = process.env.AN_API_URL || "https://an.dev/api/v1"
-const AN_BASE = process.env.AN_URL || "https://an.dev"
+const API_BASE = getApiBaseUrl()
+const AN_BASE = getAppBaseUrl()
 
 export async function deploy() {
-  p.intro("an deploy")
+  p.intro("@21st-sdk/cli deploy")
 
   // 1. Check auth
   const apiKey = getApiKey()
   if (!apiKey) {
-    p.log.error("Not logged in. Run `an login` first, or set AN_API_KEY env var.")
+    p.log.error("Not logged in. Run `npx @21st-sdk/cli login` first, or set API_KEY_21ST.")
     process.exit(1)
   }
 
@@ -88,7 +92,7 @@ export async function deploy() {
   console.log()
   p.log.info("Next steps:")
   console.log("  · Open the link above to test your agent")
-  console.log("  · Run `an deploy` again after changes")
+  console.log("  · Run `npx @21st-sdk/cli deploy` again after changes")
   console.log(`  · View all deployments: ${AN_BASE}/agents`)
 
   p.outro("Done")

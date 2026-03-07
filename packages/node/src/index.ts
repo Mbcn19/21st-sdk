@@ -1,6 +1,7 @@
-export { AnClient } from "./client"
+// `AnClient` is a legacy re-export kept for compatibility.
+export { AgentClient, AnClient } from "./client"
 export type {
-  AnClientConfig,
+  AgentClientConfig,
   CreateSandboxParams,
   Sandbox,
   SandboxDetail,
@@ -8,6 +9,10 @@ export type {
   ListThreadsParams,
   GetThreadParams,
   DeleteThreadParams,
+  RunThreadMessagePart,
+  RunThreadMessage,
+  RunThreadParams,
+  RunThreadResult,
   Thread,
   ThreadSummary,
   CreateTokenParams,
@@ -19,5 +24,7 @@ export type {
   ExecResult,
   GitCloneParams,
   GitCloneResult,
+  ApiError,
+  AnClientConfig,
   AnApiError,
 } from "./types"

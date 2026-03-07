@@ -1,11 +1,11 @@
 # Next.js Integration
 
-`@an-sdk/nextjs` provides a server-side token handler so your `an_sk_` API key never reaches the browser. It also re-exports everything from `@an-sdk/react` for convenience.
+`@21st-sdk/nextjs` provides a server-side token handler so your `an_sk_` API key never reaches the browser. It also re-exports everything from `@21st-sdk/react` for convenience.
 
 ## Install
 
 ```bash
-npm install @an-sdk/nextjs @an-sdk/react ai @ai-sdk/react
+npm install @21st-sdk/nextjs @21st-sdk/react ai @ai-sdk/react
 ```
 
 ## Setup
@@ -14,19 +14,19 @@ npm install @an-sdk/nextjs @an-sdk/react ai @ai-sdk/react
 
 ```env
 # .env.local
-AN_API_KEY=an_sk_your_key_here
+API_KEY_21ST=an_sk_your_key_here
 ```
 
-Get your API key from [an.dev/agents/dashboard/api](https://an.dev/agents/dashboard/api).
+Get your API key from [the dashboard](https://21st.dev/agents/dashboard/api).
 
 ### 2. Create the token route
 
 ```ts
-// app/api/an/token/route.ts
-import { createAnTokenHandler } from "@an-sdk/nextjs/server"
+// app/api/agent/token/route.ts
+import { createTokenHandler } from "@21st-sdk/nextjs/server"
 
-export const POST = createAnTokenHandler({
-  apiKey: process.env.AN_API_KEY!,
+export const POST = createTokenHandler({
+  apiKey: process.env.API_KEY_21ST!,
 })
 ```
 
@@ -37,15 +37,15 @@ export const POST = createAnTokenHandler({
 "use client"
 
 import { useChat } from "@ai-sdk/react"
-import { AnAgentChat, createAnChat } from "@an-sdk/nextjs"
-import "@an-sdk/react/styles.css"
+import { AgentChat, createAgentChat } from "@21st-sdk/nextjs"
+import "@21st-sdk/react/styles.css"
 import { useMemo } from "react"
 
 export default function Chat() {
   const chat = useMemo(
-    () => createAnChat({
+    () => createAgentChat({
       agent: "your-agent-slug",
-      tokenUrl: "/api/an/token",
+      tokenUrl: "/api/agent/token",
     }),
     [],
   )
@@ -53,7 +53,7 @@ export default function Chat() {
   const { messages, sendMessage, status, stop, error } = useChat({ chat })
 
   return (
-    <AnAgentChat
+    <AgentChat
       messages={messages}
       onSend={(msg) =>
         sendMessage({ parts: [{ type: "text", text: msg.content }] })
@@ -71,7 +71,7 @@ export default function Chat() {
 ```
 Browser                     Your Next.js Server              AN Relay
   |                                |                            |
-  |-- POST /api/an/token --------->|                            |
+  |-- POST /api/agent/token ------>|                            |
   |                                |-- POST /v1/tokens -------->|
   |                                |   (with an_sk_ key)        |
   |                                |<-- { token, expiresAt } ---|
@@ -85,12 +85,12 @@ The client only receives short-lived JWTs. Your API key stays on the server.
 
 ## API
 
-### `createAnTokenHandler(options)`
+### `createTokenHandler(options)`
 
 Returns a Next.js `POST` route handler.
 
 ```ts
-createAnTokenHandler({
+createTokenHandler({
   apiKey: string       // Your an_sk_ API key
   relayUrl?: string    // Default: "https://relay.an.dev"
   expiresIn?: string   // Default: "1h"
@@ -102,10 +102,10 @@ createAnTokenHandler({
 Lower-level function for custom token exchange logic.
 
 ```ts
-import { exchangeToken } from "@an-sdk/nextjs/server"
+import { exchangeToken } from "@21st-sdk/nextjs/server"
 
 const { token, expiresAt } = await exchangeToken({
-  apiKey: process.env.AN_API_KEY!,
+  apiKey: process.env.API_KEY_21ST!,
   relayUrl: "https://relay.an.dev",
   expiresIn: "1h",
 })
@@ -113,5 +113,5 @@ const { token, expiresAt } = await exchangeToken({
 
 ## Entry Points
 
-- `@an-sdk/nextjs` — Re-exports everything from `@an-sdk/react` (components, types, `createAnChat`)
-- `@an-sdk/nextjs/server` — Server-only: `createAnTokenHandler`, `exchangeToken`
+- `@21st-sdk/nextjs` — Re-exports everything from `@21st-sdk/react` (components, types, `createAgentChat`)
+- `@21st-sdk/nextjs/server` — Server-only: `createTokenHandler`, `exchangeToken`

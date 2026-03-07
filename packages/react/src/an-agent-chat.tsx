@@ -5,9 +5,9 @@ import { WindowChrome } from "./components/window-chrome"
 import { applyTheme } from "./theme"
 import { cn } from "./utils/cn"
 import { ThemeConfigContext, extractThemeConfig } from "./theme-config"
-import type { AnAgentChatProps } from "./types"
+import type { AgentChatProps } from "./types"
 
-export function AnAgentChat({
+export function AgentChat({
   messages,
   onSend,
   status,
@@ -24,7 +24,7 @@ export function AnAgentChat({
   attachments,
   className,
   style,
-}: AnAgentChatProps) {
+}: AgentChatProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -99,3 +99,6 @@ export function AnAgentChat({
     </ThemeConfigContext.Provider>
   )
 }
+
+// Legacy component alias kept for compatibility.
+export const AnAgentChat = AgentChat

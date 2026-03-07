@@ -1,7 +1,7 @@
-import { getApiKey } from "./config.js"
+import { getApiBaseUrl, getApiKey } from "./config.js"
 import * as p from "@clack/prompts"
 
-const API_BASE = process.env.AN_API_URL || "https://an.dev/api/v1"
+const API_BASE = getApiBaseUrl()
 
 function maskValue(value: string): string {
   if (value.length <= 4) return "\u2022".repeat(value.length)
@@ -11,7 +11,7 @@ function maskValue(value: string): string {
 function requireAuth(): string {
   const apiKey = getApiKey()
   if (!apiKey) {
-    p.log.error("Not logged in. Run `an login` first, or set AN_API_KEY env var.")
+    p.log.error("Not logged in. Run `npx @21st-sdk/cli login` first, or set API_KEY_21ST.")
     process.exit(1)
   }
   return apiKey
@@ -20,7 +20,7 @@ function requireAuth(): string {
 function requireAgentSlug(args: string[]): string {
   const slug = args[0]
   if (!slug || slug.startsWith("-")) {
-    p.log.error("Agent slug is required. Usage: an env list <agent-slug>")
+    p.log.error("Agent slug is required. Usage: npx @21st-sdk/cli env list <agent-slug>")
     process.exit(1)
   }
   return slug
@@ -88,7 +88,7 @@ export async function envSet(args: string[]) {
   const value = args.slice(2).join(" ")
 
   if (!key || !value) {
-    p.log.error("Usage: an env set <agent-slug> KEY VALUE")
+    p.log.error("Usage: npx @21st-sdk/cli env set <agent-slug> KEY VALUE")
     process.exit(1)
   }
 
@@ -115,7 +115,7 @@ export async function envRemove(args: string[]) {
 
   const key = args[1]
   if (!key) {
-    p.log.error("Usage: an env remove <agent-slug> KEY")
+    p.log.error("Usage: npx @21st-sdk/cli env remove <agent-slug> KEY")
     process.exit(1)
   }
 

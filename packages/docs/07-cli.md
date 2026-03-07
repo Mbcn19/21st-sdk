@@ -1,35 +1,35 @@
 # CLI Reference
 
-`@an-sdk/cli` provides the `an` command for deploying agents.
+`@21st-sdk/cli` provides the `an` command for deploying agents.
 
 ## Install
 
 ```bash
-npm install -g @an-sdk/cli
+npm install -g @21st-sdk/cli
 # or use npx
-npx @an-sdk/cli <command>
+npx @21st-sdk/cli <command>
 ```
 
 ## Commands
 
-### `an login`
+### `@21st-sdk/cli login`
 
 Authenticate with the AN platform.
 
 ```bash
-npx @an-sdk/cli login
+npx @21st-sdk/cli login
 # Enter your API key: an_sk_...
 # Authenticated as John (team: my-team)
 ```
 
 Your key is saved to `~/.an/credentials`.
 
-### `an deploy`
+### `@21st-sdk/cli deploy`
 
 Bundle and deploy your agent.
 
 ```bash
-npx @an-sdk/cli deploy
+npx @21st-sdk/cli deploy
 # Bundling src/agent.ts...
 # Bundled (12.3kb)
 # Deploying my-agent...
@@ -71,7 +71,7 @@ Subsequent deploys update the existing agent.
 The CLI uses esbuild to bundle your agent code:
 
 - Target: Node 22, ESM
-- `@an-sdk/agent` is externalized (provided by the sandbox runtime)
+- `@21st-sdk/agent` is externalized (provided by the sandbox runtime)
 - All other dependencies are bundled into a single file
 
 ## Configuration Files
@@ -85,4 +85,4 @@ The CLI uses esbuild to bundle your agent code:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `AN_API_URL` | `https://an.dev/api/v1` | Override API endpoint |
+| `API_URL_21ST` | `https://an.dev/api/v1` | Override API endpoint |

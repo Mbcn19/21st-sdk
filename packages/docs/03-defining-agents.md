@@ -1,11 +1,11 @@
 # Defining Agents
 
-Agents are defined with the `agent()` and `tool()` functions from `@an-sdk/agent`. These are config-only — they return exactly what you pass in, with type inference added. The actual execution happens in the AN runtime (E2B sandbox).
+Agents are defined with the `agent()` and `tool()` functions from `@21st-sdk/agent`. These are config-only — they return exactly what you pass in, with type inference added. The actual execution happens in the AN runtime (E2B sandbox).
 
 ## `agent(config)`
 
 ```ts
-import { agent } from "@an-sdk/agent"
+import { agent } from "@21st-sdk/agent"
 
 export default agent({
   // Model (default: "claude-sonnet-4-6")
@@ -52,7 +52,7 @@ export default agent({
 ## `tool(definition)`
 
 ```ts
-import { tool } from "@an-sdk/agent"
+import { tool } from "@21st-sdk/agent"
 import { z } from "zod"
 
 const myTool = tool({
