@@ -6,3 +6,10 @@ dist/
 .DS_Store
 *.tgz
 CLAUDE.md
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.eggs/
+*.egg
