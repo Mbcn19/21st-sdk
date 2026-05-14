@@ -2,6 +2,8 @@
 
 Open-source SDK, runtime, and service code for building, deploying, and embedding 21st Agents.
 
+Agent examples live in [21st-dev/21st-sdk-examples](https://github.com/21st-dev/21st-sdk-examples).
+
 ## Architecture
 
 ```text
