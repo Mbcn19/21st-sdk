@@ -17,7 +17,7 @@ import os
 
 from twentyfirst_sdk import AgentClient
 
-client = AgentClient(api_key=os.environ["API_KEY_21ST"])  # an_sk_...
+client = AgentClient(api_key=os.environ["API_KEY_21ST"])  # 21st_sk_...
 
 # Create a sandbox for your agent
 sandbox = client.sandboxes.create(agent="my-agent")
@@ -36,7 +36,7 @@ print(token.expiresAt)
 
 ```python
 AgentClient(
-    api_key="...",   # Your an_sk_ API key
+    api_key="...",   # Your 21st_sk_ API key
     base_url="...",  # Optional, default: "https://relay.an.dev"
 )
 ```
@@ -51,6 +51,12 @@ AgentClient(
 | `exec(sandbox_id, command, ...)` | Run a command in a sandbox |
 | `files.write(sandbox_id, files)` | Write files into a sandbox |
 | `files.read(sandbox_id, path)` | Read a file from a sandbox |
+| `files.list(sandbox_id, path, depth=...)` | List files and directories under a path |
+| `files.get_info(sandbox_id, path)` | Get metadata for one file or directory |
+| `files.exists(sandbox_id, path)` | Check whether a file or directory exists |
+| `files.make_dir(sandbox_id, path)` | Create a directory path |
+| `files.rename(sandbox_id, old_path, new_path)` | Rename or move a file or directory |
+| `files.remove(sandbox_id, path)` | Remove a file or directory |
 | `git.clone(sandbox_id, url, ...)` | Clone a repository into a sandbox |
 
 ### `client.threads`

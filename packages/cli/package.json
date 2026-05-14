@@ -1,12 +1,13 @@
 {
   "name": "@21st-sdk/cli",
-  "version": "0.0.15",
+  "version": "0.0.28",
   "description": "CLI for deploying AI agents to 21st Agents",
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
   "bin": {
+    "21st": "dist/index.js",
     "an": "dist/index.js"
   },
   "files": [
@@ -28,7 +29,8 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.0.1",
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.24.0",
+    "tar": "^7.5.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

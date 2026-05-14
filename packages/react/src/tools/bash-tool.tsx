@@ -34,7 +34,7 @@ export function BashToolTerminalCard({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border bg-muted/50 overflow-hidden mx-2 my-0.5"
+      className="rounded-lg border border-border bg-muted/30 overflow-hidden my-0.5"
     >
       <div className="flex items-center justify-between pl-2.5 pr-2 h-7">
         <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
@@ -44,7 +44,7 @@ export function BashToolTerminalCard({
               Running command: {summary}
             </TextShimmer>
           ) : (
-            <span className="text-xs text-foreground/40 truncate">Ran command: {summary}</span>
+            <span className="text-xs text-muted-foreground truncate">Ran command: {summary}</span>
           )}
         </div>
         {isPending && (
@@ -53,13 +53,13 @@ export function BashToolTerminalCard({
           </svg>
         )}
       </div>
-      <div className="border-t border-foreground/[0.04] px-2.5 py-1.5 font-mono text-[10px] leading-[16px] overflow-hidden">
+      <div className="border-t border-border px-2.5 py-1.5 font-mono text-[10px] leading-[16px] overflow-hidden">
         <div className="break-all">
-          <span className="text-amber-400/50">$ </span>
-          <span className="text-foreground/40">{command}</span>
+          <span className="text-amber-600 dark:text-amber-400">$ </span>
+          <span className="text-foreground">{command}</span>
         </div>
         {!isPending && step.bashOutput && (
-          <div className="mt-1 text-foreground/25 whitespace-pre-line max-h-[80px] overflow-hidden">
+          <div className="mt-1 text-muted-foreground whitespace-pre-line max-h-[80px] overflow-hidden">
             {step.bashOutput}
           </div>
         )}

@@ -55,7 +55,7 @@ AN supports two runtimes:
 
 Two layers of authentication:
 
-1. **Client -> Relay**: API key (`an_sk_...`) or short-lived JWT (via token exchange)
+1. **Client -> Relay**: API key (`21st_sk_...`) or short-lived JWT (via token exchange)
 2. **Sandbox -> AI Provider**: Handled internally by the platform (Claude Proxy)
 
 For web apps, use `@21st-sdk/nextjs` to exchange your API key for a short-lived JWT on the server, so the key never reaches the browser.

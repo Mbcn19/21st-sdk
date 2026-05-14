@@ -85,6 +85,12 @@ export const toolRegistry: Record<string, ToolMeta> = {
     },
     variant: "simple",
   },
+  "tool-Skill": {
+    icon: Sparkles,
+    title: () => "Skill",
+    subtitle: (part) => part.input?.skill || "",
+    variant: "simple",
+  },
   "tool-Grep": {
     icon: Search,
     title: (part) => {

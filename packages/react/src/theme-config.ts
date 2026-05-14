@@ -49,7 +49,7 @@ export const DEFAULT_THEME_CONFIG: ChatThemeConfig = {
   stickyUserMessages: false,
   showDateDivider: false,
   inputBarPlaceholder: "Send a message...",
-  toolCallStyle: "normal",
+  toolCallStyle: "compact",
   textContrast: "normal",
   showCopyButton: true,
   attachmentButtonStyle: "hidden",

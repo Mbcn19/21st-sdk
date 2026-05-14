@@ -11,6 +11,11 @@ export type PermissionMode =
 
 export type Runtime = "claude-code" | "codex"
 
+export interface AgentMcpServer {
+  name: string
+  url: string
+}
+
 // --- Tool Types ---
 
 export type ToolResultContent =
@@ -22,13 +27,20 @@ export type CallToolResult = {
   isError?: boolean
 }
 
+export interface ToolContext {
+  env?: Record<string, string>
+}
+
 export interface ToolDefinition<
   TInput extends z.ZodObject<z.ZodRawShape> = z.ZodObject<z.ZodRawShape>,
 > {
   readonly _type: "tool"
   description: string
   inputSchema: TInput
-  execute: (args: z.infer<TInput>) => Promise<CallToolResult>
+  execute: (
+    args: z.infer<TInput>,
+    context: ToolContext,
+  ) => Promise<CallToolResult>
 }
 
 export type ToolSet = Record<string, ToolDefinition<any>>
@@ -72,18 +84,49 @@ export interface OnErrorPayload {
 // --- Sandbox Config ---
 
 export interface SandboxOptions {
-  /** System packages to install via apt-get */
+  /** Number of CPUs allocated to the sandbox template. E2B-only for now. */
+  cpuCount?: number
+  /** Amount of memory in MB allocated to the sandbox template. E2B-only for now. */
+  memoryMB?: number
+  /** System packages to install via apt-get during deploy-time image/template build. */
   apt?: string[]
-  /** Commands to run on sandbox creation (after apt install) */
+  /** Commands to run during image/template build (deploy-time). */
+  build?: string[]
+  /** Commands to run on sandbox creation. Portable across E2B and OpenSandbox. */
   setup?: string[]
-  /** Files to write to sandbox (path → content) */
+  /** Files to write to sandbox (path → content). Portable across E2B and OpenSandbox. */
   files?: Record<string, string>
-  /** Working directory for Claude Code (default: /home/user/repo) */
+  /** Working directory for Claude Code. Portable across E2B and OpenSandbox. */
   cwd?: string
+  /** Default TTL in milliseconds for runtime sandboxes created from this deployment. Portable across providers. */
+  timeoutMs?: number
+  /** Default outbound allow-list for runtime sandboxes created from this deployment. Provider support may vary. */
+  networkAllowOut?: string[]
+  /** Default outbound deny-list for runtime sandboxes created from this deployment. Provider support may vary. */
+  networkDenyOut?: string[]
 }
 
 export interface SandboxConfig extends SandboxOptions {
   readonly _type: "sandbox"
+}
+
+// --- Agent Request Options (per-invocation runtime configuration) ---
+
+export interface AgentRequestOptions {
+  /** Override the model used for this invocation */
+  model?: string
+  /** Override the system prompt for this invocation */
+  systemPrompt?:
+    | string
+    | { type: "preset"; preset: "claude_code"; append?: string }
+  /** Override the maximum number of turns */
+  maxTurns?: number
+  /** Override the maximum budget in USD */
+  maxBudgetUsd?: number
+  /** Override the permission mode */
+  permissionMode?: PermissionMode
+  /** Tools to block for this invocation (supports MCP patterns like "mcp__server__tool") */
+  disallowedTools?: string[]
 }
 
 // --- Agent Config ---
@@ -92,11 +135,16 @@ export interface AgentConfig<TOOLS extends ToolSet = ToolSet> {
   readonly _type: "agent"
   runtime: Runtime
   model: string
-  systemPrompt?: string | { type: "preset"; preset: "claude_code"; append?: string }
+  systemPrompt?:
+    | string
+    | { type: "preset"; preset: "claude_code"; append?: string }
   permissionMode: PermissionMode
   maxTurns: number
   maxBudgetUsd?: number
+  maxSandboxBudgetUsd?: number
   sandbox?: SandboxConfig
+  mcpServers: AgentMcpServer[]
+  vaultIds?: string[]
   tools: TOOLS
   onStart?: (payload: OnStartPayload) => void | Promise<void>
   onToolCall?: (
@@ -117,7 +165,10 @@ export interface AgentOptions<TOOLS extends ToolSet = ToolSet> {
   permissionMode?: PermissionMode
   maxTurns?: number
   maxBudgetUsd?: number
+  maxSandboxBudgetUsd?: number
   sandbox?: SandboxConfig
+  mcpServers?: AgentMcpServer[]
+  vaultIds?: string[]
   tools?: TOOLS
   onStart?: (payload: OnStartPayload) => void | Promise<void>
   onToolCall?: (

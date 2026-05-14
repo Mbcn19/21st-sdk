@@ -54,7 +54,7 @@ export function AgentChat({
     <ThemeConfigContext.Provider value={themeConfig}>
       <div
         ref={rootRef}
-        className={cn("an-root flex flex-col h-full", classNames?.root, className)}
+        className={cn("an-root flex flex-col h-full min-h-0", classNames?.root, className)}
         style={{
           fontFamily: "var(--an-font-family)",
           fontSize: "var(--an-text-size)",

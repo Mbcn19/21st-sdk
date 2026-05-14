@@ -10,18 +10,45 @@ import { ToolRowBase } from "./tool-row-base"
 import { useThemeConfig } from "../theme-config"
 import { mapToolInvocationToStep, mapToolStateToStepState } from "../utils/tool-adapters"
 
+function inferSourceFromUrl(url: string): SourceType {
+  try {
+    const hostname = new URL(url).hostname.replace("www.", "")
+    if (hostname.includes("github.com")) return "github"
+    if (hostname.includes("stackoverflow.com")) return "stackoverflow"
+    if (hostname.includes("arxiv.org")) return "arxiv"
+    if (hostname.includes("scholar.google")) return "scholar"
+    if (hostname.includes("booking.com")) return "booking"
+    if (hostname.includes("tripadvisor.com")) return "tripadvisor"
+    if (hostname.includes("airbnb.com")) return "airbnb"
+    if (hostname.includes("expedia.com")) return "expedia"
+    if (hostname.includes("stripe.com")) return "stripe"
+    if (hostname.includes("google.com")) return "google"
+  } catch {}
+  return "web"
+}
+
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace("www.", "")
+  } catch {
+    return url
+  }
+}
+
 export function SearchGroupRich({
   toolSteps,
   stepStates,
   onStepComplete,
   showIcon,
   size = "normal",
+  useMockFallback = false,
 }: {
   toolSteps: Extract<TimelineStep, { type: "tool-call" }>[]
   stepStates: Record<string, StepState>
   onStepComplete: (id: string) => void
   showIcon: boolean
   size?: ToolSize
+  useMockFallback?: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   const anyAnimating = toolSteps.some((s) => stepStates[s.id] === "animating")
@@ -29,24 +56,54 @@ export function SearchGroupRich({
 
   const searchQuery = toolSteps.find((s) => s.searchQuery)?.searchQuery ?? "searching..."
 
-  const { results, sourceTabs } = useMemo(() => {
+  const realResults = useMemo(() => {
+    for (const s of toolSteps) {
+      if (s.searchResults && s.searchResults.length > 0) return s.searchResults
+    }
+    return null
+  }, [toolSteps])
+
+  const { displayResults, sourceTabs } = useMemo(() => {
+    if (realResults) {
+      const mapped = realResults.map((r) => ({
+        source: r.url ? inferSourceFromUrl(r.url) : ("web" as SourceType),
+        title: r.title,
+        date: r.url ? extractDomain(r.url) : "",
+        url: r.url,
+      }))
+      const tabCounts = new Map<SourceType, number>()
+      for (const r of mapped) {
+        tabCounts.set(r.source, (tabCounts.get(r.source) ?? 0) + 1)
+      }
+      const tabs = Array.from(tabCounts.entries()).map(([source, count]) => ({
+        source,
+        label: source.charAt(0).toUpperCase() + source.slice(1),
+        count,
+      }))
+      return { displayResults: mapped, sourceTabs: tabs }
+    }
+
+    if (!useMockFallback) {
+      return { displayResults: [], sourceTabs: [] }
+    }
+
     const firstSource = toolSteps.find((s) => s.searchSource)?.searchSource
     if (firstSource && SEARCH_RESULT_SETS[firstSource]) {
       const set = SEARCH_RESULT_SETS[firstSource]!
-      return { results: set.results, sourceTabs: set.tabs }
+      return { displayResults: set.results.map((r) => ({ ...r, url: undefined })), sourceTabs: set.tabs }
     }
     const isFirstGroup = (toolSteps[0]?.id ?? "").includes("1")
     const set = SEARCH_RESULT_SETS[isFirstGroup ? "default-1" : "default-2"]!
-    return { results: set.results, sourceTabs: set.tabs }
-  }, [toolSteps])
+    return { displayResults: set.results.map((r) => ({ ...r, url: undefined })), sourceTabs: set.tabs }
+  }, [toolSteps, realResults, useMockFallback])
 
-  const totalResults = results.length
+  const totalResults = displayResults.length
 
   const headerSources = useMemo(() => {
     const unique = new Set<SourceType>()
-    for (const r of results) unique.add(r.source)
+    for (const r of displayResults) unique.add(r.source)
     return Array.from(unique)
-  }, [results])
+  }, [displayResults])
 
   return (
     <>
@@ -93,18 +150,8 @@ export function SearchGroupRich({
           </div>
           <div className="max-h-[200px] overflow-y-auto">
             <div className="flex flex-col gap-px p-1">
-              {results.map((result, i) => (
-                <div key={i} className="flex items-center gap-2 px-2 py-1 min-h-[28px] rounded-md">
-                  <div className="flex items-center justify-center w-5 h-5 shrink-0 text-muted-foreground">
-                    <SourceIcon source={result.source} size={14} />
-                  </div>
-                  <span className="text-[13px] leading-5 text-foreground/60 truncate flex-1 min-w-0">
-                    {result.title}
-                  </span>
-                  <span className="text-[11px] leading-4 text-foreground/20 shrink-0 whitespace-nowrap">
-                    {result.date}
-                  </span>
-                </div>
+              {displayResults.map((result, i) => (
+                <ResultRow key={i} result={result} />
               ))}
             </div>
           </div>
@@ -112,6 +159,31 @@ export function SearchGroupRich({
       </ToolRowBase>
     </>
   )
+}
+
+function ResultRow({ result }: { result: { source: SourceType; title: string; date: string; url?: string } }) {
+  const inner = (
+    <div className={`flex items-center gap-2 px-2 py-1 min-h-[28px] rounded-md ${result.url ? "hover:bg-foreground/[0.04] transition-colors" : ""}`}>
+      <div className="flex items-center justify-center w-5 h-5 shrink-0 text-muted-foreground">
+        <SourceIcon source={result.source} size={14} />
+      </div>
+      <span className="text-[13px] leading-5 text-foreground/60 truncate flex-1 min-w-0">
+        {result.title}
+      </span>
+      <span className="text-[11px] leading-4 text-foreground/20 shrink-0 whitespace-nowrap">
+        {result.date}
+      </span>
+    </div>
+  )
+
+  if (result.url) {
+    return (
+      <a href={result.url} target="_blank" rel="noopener noreferrer" className="no-underline">
+        {inner}
+      </a>
+    )
+  }
+  return inner
 }
 
 export function SearchGroupMinimal({

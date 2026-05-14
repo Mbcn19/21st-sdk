@@ -15,6 +15,7 @@ import type { CustomToolRendererProps } from "../types"
 
 interface ToolRendererProps {
   part: any
+  nestedTools?: any[]
   chatStatus?: string
   toolRenderers?: Record<string, React.ComponentType<CustomToolRendererProps>>
 }
@@ -27,7 +28,7 @@ function deriveToolStatus(part: any, chatStatus?: string): CustomToolRendererPro
   return isPending ? "pending" : "success"
 }
 
-export const ToolRenderer = memo(function ToolRenderer({ part, chatStatus, toolRenderers }: ToolRendererProps) {
+export const ToolRenderer = memo(function ToolRenderer({ part, nestedTools, chatStatus, toolRenderers }: ToolRendererProps) {
   const partType = part.type as string
   const config = useThemeConfig()
   const showIcon = config.showToolIcons
@@ -50,7 +51,7 @@ export const ToolRenderer = memo(function ToolRenderer({ part, chatStatus, toolR
       return <TodoTool part={part} chatStatus={chatStatus} />
     case "tool-Task":
     case "tool-Agent":
-      return <TaskTool part={part} chatStatus={chatStatus} />
+      return <TaskTool part={part} nestedTools={nestedTools} chatStatus={chatStatus} />
     case "tool-Thinking":
       if (config.thinkingDisplay === "hidden") return null
       return <ThinkingTool part={part} chatStatus={chatStatus} variant={config.thinkingDisplay} showIcon={showIcon} />

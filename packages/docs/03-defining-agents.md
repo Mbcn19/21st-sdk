@@ -11,7 +11,8 @@ export default agent({
   // Model (default: "claude-sonnet-4-6")
   model: "claude-sonnet-4-6",
 
-  // System prompt
+  // For "claude-code" runtime, string prompts are appended
+  // to Claude Code's default preset prompt by default.
   systemPrompt: "You are a PR reviewer...",
 
   // Custom tools (see below)
@@ -45,6 +46,7 @@ export default agent({
 |-------|---------|
 | `model` | `"claude-sonnet-4-6"` |
 | `runtime` | `"claude-code"` |
+| `systemPrompt` | Claude Code preset prompt when omitted, or preset + appended string when a string is provided and `runtime === "claude-code"` |
 | `permissionMode` | `"default"` |
 | `maxTurns` | `50` |
 | `tools` | `{}` |
@@ -133,7 +135,9 @@ onError: async ({ error }) => {
 // Agent config (all fields required — defaults filled by agent())
 interface AgentConfig {
   model: string
-  systemPrompt: string
+  systemPrompt?:
+    | string
+    | { type: "preset"; preset: "claude_code"; append?: string }
   tools: ToolSet
   runtime: "claude-code" | "codex"
   permissionMode: "default" | "acceptEdits" | "bypassPermissions"

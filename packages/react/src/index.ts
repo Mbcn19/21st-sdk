@@ -76,6 +76,7 @@ export type { ClaudeModelId, AnClaudeModelId } from "./models"
 
 // Types
 export type {
+  AgentRequestOptions,
   ChatTheme,
   ChatClassNames,
   ChatSlots,

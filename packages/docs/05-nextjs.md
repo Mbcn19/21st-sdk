@@ -1,6 +1,6 @@
 # Next.js Integration
 
-`@21st-sdk/nextjs` provides a server-side token handler so your `an_sk_` API key never reaches the browser. It also re-exports everything from `@21st-sdk/react` for convenience.
+`@21st-sdk/nextjs` provides a server-side token handler so your `21st_sk_` API key never reaches the browser. Legacy `an_sk_` keys still work. It also re-exports everything from `@21st-sdk/react` for convenience.
 
 ## Install
 
@@ -14,7 +14,7 @@ npm install @21st-sdk/nextjs @21st-sdk/react ai @ai-sdk/react
 
 ```env
 # .env.local
-API_KEY_21ST=an_sk_your_key_here
+API_KEY_21ST=21st_sk_your_key_here
 ```
 
 Get your API key from [the dashboard](https://21st.dev/agents/dashboard/api).
@@ -73,7 +73,7 @@ Browser                     Your Next.js Server              AN Relay
   |                                |                            |
   |-- POST /api/agent/token ------>|                            |
   |                                |-- POST /v1/tokens -------->|
-  |                                |   (with an_sk_ key)        |
+  |                                |   (with API key)           |
   |                                |<-- { token, expiresAt } ---|
   |<-- { token, expiresAt } ------|                            |
   |                                                             |
@@ -91,7 +91,7 @@ Returns a Next.js `POST` route handler.
 
 ```ts
 createTokenHandler({
-  apiKey: string       // Your an_sk_ API key
+  apiKey: string       // Your 21st_sk_ API key
   relayUrl?: string    // Default: "https://relay.an.dev"
   expiresIn?: string   // Default: "1h"
 })

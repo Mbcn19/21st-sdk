@@ -4,16 +4,17 @@ import { cn } from "../utils/cn"
 import { useThemeConfig } from "../theme-config"
 import { UserMessage } from "./user-message"
 import { StreamingMarkdown } from "./streaming-markdown"
-import { MessageActions } from "./message-actions"
 import { DateDivider } from "./date-divider"
 import type { CustomToolRendererProps } from "../types"
 import type { TimelineStep, StepState } from "../types/timeline"
 import { mapToolInvocationToStep, mapToolStateToStepState } from "../utils/tool-adapters"
-import { routeToolCall, resolveToolSize } from "../tools/tool-router"
+import { resolveToolSize, routeToolCall } from "../tools/tool-router"
 import { SearchGroupRich, SearchGroupMinimal } from "../tools/search-tool"
 import { ToolTimer } from "../tools/tool-timer"
 import { ToolRowBase } from "../tools/tool-row-base"
 import { SpinnerIcon16 } from "../icons/tool-icons"
+import { ToolRenderer as DefaultToolRenderer } from "../tools/tool-renderer"
+import { normalizeAssistantToolParts } from "../utils/tool-part-normalizer"
 
 interface MessageListProps {
   messages: UIMessage[]
@@ -23,6 +24,7 @@ interface MessageListProps {
     UserMessage?: React.ComponentType<any>
     ToolRenderer?: React.ComponentType<any>
     MessageActions?: React.ComponentType<any>
+    EmptyState?: React.ComponentType
   }
   classNames?: {
     userMessage?: string
@@ -51,6 +53,11 @@ function densityClass(density: string): string {
 function isSearchTool(toolName: string): boolean {
   const lower = toolName.toLowerCase()
   return lower === "websearch" || lower === "web_search" || lower === "grep" || lower === "glob" || lower === "webfetch" || lower === "web_fetch"
+}
+
+function isV5ToolPart(part: any): boolean {
+  const partType = part?.type
+  return partType === "dynamic-tool" || (typeof partType === "string" && partType.startsWith("tool-"))
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -129,6 +136,7 @@ export const MessageList = memo(function MessageList({
 
   const config = useThemeConfig()
   const CustomUserMessage = slots?.UserMessage || UserMessage
+  const CustomToolRenderer = slots?.ToolRenderer || DefaultToolRenderer
 
   const isStreaming = status === "streaming" || status === "submitted"
   const toolSize = resolveToolSize(config)
@@ -136,7 +144,7 @@ export const MessageList = memo(function MessageList({
 
   const lastAssistantMsg = [...messages].reverse().find((m) => m.role === "assistant")
   const lastAssistantHasContent = lastAssistantMsg && (lastAssistantMsg.parts ?? []).some(
-    (p: any) => (p.type === "text" && p.text?.trim()) || p.type === "tool-invocation",
+    (p: any) => (p.type === "text" && p.text?.trim()) || p.type === "tool-invocation" || isV5ToolPart(p),
   )
   const showPlanning = isStreaming && !lastAssistantHasContent
 
@@ -314,13 +322,19 @@ export const MessageList = memo(function MessageList({
     <div
       ref={containerRefCallback}
       onScroll={handleScroll}
-      className={cn("an-message-list flex-1 overflow-y-auto", className)}
+      className={cn("an-message-list flex-1 min-h-0 overflow-y-auto", className)}
     >
       <div
         ref={contentWrapperRef}
         className="mx-auto px-4 py-6"
         style={{ maxWidth: "var(--an-max-width, 420px)" }}
       >
+        {messages.length === 0 && slots?.EmptyState && (
+          <div className="flex flex-1 items-center justify-center" style={{ minHeight: "calc(var(--chat-container-height, 400px) - 100px)" }}>
+            <slots.EmptyState />
+          </div>
+        )}
+
         {config.showDateDivider && messages.length > 0 && <DateDivider />}
 
         <div className={densityClass(config.messageDensity)}>
@@ -366,6 +380,7 @@ export const MessageList = memo(function MessageList({
                       isStreaming={isStreaming}
                       config={config}
                       toolSize={toolSize}
+                      ToolRendererComponent={CustomToolRenderer}
                       toolRenderers={toolRenderers}
                     />
                   )
@@ -396,6 +411,7 @@ function AssistantParts({
   isStreaming,
   config,
   toolSize,
+  ToolRendererComponent,
   toolRenderers,
 }: {
   msg: any
@@ -403,17 +419,43 @@ function AssistantParts({
   isStreaming: boolean
   config: ReturnType<typeof useThemeConfig>
   toolSize: "normal" | "compact"
+  ToolRendererComponent: React.ComponentType<any>
   toolRenderers?: Record<string, React.ComponentType<CustomToolRendererProps>>
 }) {
-  const parts = msg.parts ?? []
+  const parts = useMemo(() => normalizeAssistantToolParts(msg.parts ?? []) as any[], [msg.parts])
 
   const { elements } = useMemo(() => {
     const elems: React.ReactNode[] = []
+    const taskPartIds = new Set(
+      parts
+        .filter((p: any) => (p.type === "tool-Task" || p.type === "tool-Agent") && p.toolCallId)
+        .map((p: any) => p.toolCallId),
+    )
+    const nestedToolsMap = new Map<string, any[]>()
+    const nestedToolIds = new Set<string>()
+
+    for (const part of parts) {
+      if (part?.type === "tool-TaskOutput") continue
+      if (!part?.toolCallId || !part.toolCallId.includes(":")) continue
+      const parentId = part.toolCallId.split(":")[0]
+      if (!taskPartIds.has(parentId)) continue
+      if (!nestedToolsMap.has(parentId)) {
+        nestedToolsMap.set(parentId, [])
+      }
+      nestedToolsMap.get(parentId)!.push(part)
+      nestedToolIds.add(part.toolCallId)
+    }
+
     let actionIndex = 0
     let i = 0
 
     while (i < parts.length) {
       const part = parts[i]!
+
+      if (part.type === "tool-TaskOutput") {
+        i++
+        continue
+      }
 
       if (part.type === "text") {
         const text = part.text as string
@@ -429,6 +471,30 @@ function AssistantParts({
             </div>,
           )
         }
+        i++
+        continue
+      }
+
+      if (isV5ToolPart(part)) {
+        if (part.toolCallId && nestedToolIds.has(part.toolCallId)) {
+          i++
+          continue
+        }
+
+        const chatStreamingStatus = isLast && isStreaming ? "streaming" : undefined
+        const nestedTools =
+          part.type === "tool-Task" || part.type === "tool-Agent"
+            ? nestedToolsMap.get(part.toolCallId) || []
+            : undefined
+        elems.push(
+          <ToolRendererComponent
+            key={part.toolCallId ?? `${msg.id}-tool-${i}`}
+            part={part}
+            nestedTools={nestedTools}
+            chatStatus={chatStreamingStatus}
+            toolRenderers={toolRenderers}
+          />,
+        )
         i++
         continue
       }
@@ -487,7 +553,7 @@ function AssistantParts({
     }
 
     return { elements: elems }
-  }, [parts, msg.id, isLast, isStreaming, config, toolSize])
+  }, [parts, msg.id, isLast, isStreaming, config, toolSize, ToolRendererComponent, toolRenderers])
 
   return <>{elements}</>
 }

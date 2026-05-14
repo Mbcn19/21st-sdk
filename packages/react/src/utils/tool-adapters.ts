@@ -1,5 +1,117 @@
 import type { TimelineStep, StepState } from "../types/timeline"
 
+function calculateDiffStatsFromPatch(
+  patches: Array<{ lines?: string[] }>,
+): string | undefined {
+  let addedLines = 0
+  let removedLines = 0
+
+  for (const patch of patches) {
+    if (!patch.lines) continue
+    for (const line of patch.lines) {
+      if (line.startsWith("+")) addedLines++
+      else if (line.startsWith("-")) removedLines++
+    }
+  }
+
+  if (addedLines === 0 && removedLines === 0) return undefined
+
+  const parts: string[] = []
+  if (addedLines > 0) parts.push(`+${addedLines}`)
+  if (removedLines > 0) parts.push(`-${removedLines}`)
+  return parts.join(" ")
+}
+
+function getDiffLinesFromPatch(
+  patches: Array<{ lines?: string[] }>,
+): { type: "add" | "remove" | "context"; content: string }[] {
+  const result: { type: "add" | "remove" | "context"; content: string }[] = []
+
+  for (const patch of patches) {
+    if (!patch.lines) continue
+    for (const line of patch.lines) {
+      if (line.startsWith("+")) {
+        result.push({ type: "add", content: line.slice(1) })
+      } else if (line.startsWith("-")) {
+        result.push({ type: "remove", content: line.slice(1) })
+      } else if (line.startsWith(" ")) {
+        result.push({ type: "context", content: line.slice(1) })
+      }
+    }
+  }
+
+  return result
+}
+
+function extractWebSearchResults(
+  result: unknown,
+): { title: string; url?: string }[] | undefined {
+  if (!result || typeof result !== "object") {
+    if (typeof result === "string") return parseMarkdownResults(result)
+    return undefined
+  }
+
+  const obj = result as Record<string, unknown>
+
+  if (Array.isArray(obj.results)) {
+    const items: { title: string; url?: string }[] = []
+    for (const entry of obj.results) {
+      if (typeof entry === "string") continue
+      if (entry && typeof entry === "object") {
+        const e = entry as Record<string, unknown>
+        if (Array.isArray(e.content)) {
+          for (const item of e.content) {
+            if (item && typeof item === "object" && (item as Record<string, unknown>).title) {
+              items.push({
+                title: String((item as Record<string, unknown>).title),
+                url: (item as Record<string, unknown>).url
+                  ? String((item as Record<string, unknown>).url)
+                  : undefined,
+              })
+            }
+          }
+        }
+        if (e.title) {
+          items.push({ title: String(e.title), url: e.url ? String(e.url) : undefined })
+        }
+      }
+    }
+    if (items.length > 0) return items
+  }
+
+  if (Array.isArray(obj.content)) {
+    for (const block of obj.content) {
+      if (block && typeof block === "object" && (block as Record<string, unknown>).type === "text") {
+        const text = (block as Record<string, unknown>).text
+        if (typeof text === "string") {
+          const parsed = parseMarkdownResults(text)
+          if (parsed) return parsed
+        }
+      }
+    }
+  }
+
+  return undefined
+}
+
+function parseMarkdownResults(text: string): { title: string; url?: string }[] | undefined {
+  const sections = text.split(/^###\s+/m).filter(Boolean)
+  if (sections.length === 0) return undefined
+  const items: { title: string; url?: string }[] = []
+  for (const section of sections) {
+    const lines = section.split("\n").map((l) => l.trim()).filter(Boolean)
+    if (lines.length === 0) continue
+    const title = lines[0]!
+    const urlLine = lines[1]
+    let url: string | undefined
+    if (urlLine && /^https?:\/\//.test(urlLine)) {
+      url = urlLine
+    }
+    items.push({ title, url })
+  }
+  return items.length > 0 ? items : undefined
+}
+
 export function mapToolStateToStepState(
   aiState: "partial-call" | "call" | "result",
 ): StepState {
@@ -10,21 +122,25 @@ export function mapToolNameToVariant(
   toolName: string,
 ): "thinking" | "action" | "search" | undefined {
   const lower = toolName.toLowerCase()
-  if (lower === "thinking" || lower === "reasoning") return "thinking"
+  const baseName = lower.includes("__") ? lower.split("__").pop()! : lower
+  if (baseName === "thinking" || baseName === "reasoning") return "thinking"
   if (
-    lower === "websearch" ||
-    lower === "web_search" ||
-    lower === "grep" ||
-    lower === "glob" ||
-    lower === "webfetch" ||
-    lower === "web_fetch"
+    baseName === "websearch" ||
+    baseName === "web_search" ||
+    baseName === "exa_search" ||
+    baseName === "grep" ||
+    baseName === "glob" ||
+    baseName === "webfetch" ||
+    baseName === "web_fetch" ||
+    baseName.endsWith("_search")
   )
     return "search"
   return undefined
 }
 
 function extractToolDetail(toolName: string, args: Record<string, any>): string {
-  switch (toolName) {
+  const baseName = toolName.includes("__") ? toolName.split("__").pop()! : toolName
+  switch (baseName) {
     case "Bash":
       return args?.command
         ? String(args.command).slice(0, 80)
@@ -41,6 +157,7 @@ function extractToolDetail(toolName: string, args: Record<string, any>): string 
       return args?.pattern ? String(args.pattern) : ""
     case "WebSearch":
     case "web_search":
+    case "exa_search":
       return args?.query ? String(args.query) : ""
     case "WebFetch":
     case "web_fetch":
@@ -74,8 +191,23 @@ export function mapToolInvocationToStep(
   if (toolName === "Bash") {
     step.bashCommand = args?.command ? String(args.command) : undefined
     if (toolInvocation.state === "result" && result) {
-      step.bashOutput = typeof result === "string" ? result : JSON.stringify(result)
-      step.bashSuccess = true
+      if (typeof result === "string") {
+        step.bashOutput = result
+        step.bashSuccess = true
+      } else if (typeof result === "object") {
+        const stdout = typeof result?.stdout === "string"
+          ? result.stdout
+          : typeof result?.output === "string"
+            ? result.output
+            : ""
+        const stderr = typeof result?.stderr === "string" ? result.stderr : ""
+        step.bashOutput = [stdout, stderr].filter(Boolean).join(stdout && stderr ? "\n" : "")
+        const exitCode = result?.exitCode ?? result?.exit_code
+        step.bashSuccess = exitCode === undefined ? true : exitCode === 0
+      } else {
+        step.bashOutput = JSON.stringify(result)
+        step.bashSuccess = true
+      }
     }
   }
 
@@ -83,18 +215,44 @@ export function mapToolInvocationToStep(
     step.filePath = args?.file_path ? String(args.file_path) : undefined
   }
 
-  if (
-    toolName === "WebSearch" ||
-    toolName === "web_search" ||
-    toolName === "Grep" ||
-    toolName === "Glob"
-  ) {
-    step.searchQuery =
-      args?.query ?? args?.pattern ? String(args?.query ?? args?.pattern) : undefined
-    step.searchSource = toolName === "WebSearch" || toolName === "web_search" ? "web" : "code"
+  if (toolName === "Write") {
+    const content =
+      typeof result?.content === "string"
+        ? result.content
+        : typeof args?.content === "string"
+          ? args.content
+          : ""
+
+    if (content) {
+      const lines = content.split("\n")
+      step.diffStats = `+${lines.length}`
+      step.diffLines = lines.map((line: string) => ({ type: "add", content: line }))
+    }
   }
 
-  if (toolName.toLowerCase() === "thinking" || toolName.toLowerCase() === "reasoning") {
+  if (toolName === "Edit" && Array.isArray(result?.structuredPatch)) {
+    step.diffStats = calculateDiffStatsFromPatch(result.structuredPatch)
+    step.diffLines = getDiffLinesFromPatch(result.structuredPatch)
+  }
+
+  const isSearch = step.toolVariant === "search"
+  if (isSearch) {
+    const rawSearchQuery = args?.query ?? args?.pattern
+    step.searchQuery = rawSearchQuery ? String(rawSearchQuery) : undefined
+    const baseLower = toolName.toLowerCase().includes("__")
+      ? toolName.toLowerCase().split("__").pop()!
+      : toolName.toLowerCase()
+    step.searchSource = (baseLower === "grep" || baseLower === "glob") ? "code" : "web"
+
+    if (toolInvocation.state === "result" && result) {
+      step.searchResults = extractWebSearchResults(result)
+    }
+  }
+
+  const baseLowerForThinking = toolName.toLowerCase().includes("__")
+    ? toolName.toLowerCase().split("__").pop()!
+    : toolName.toLowerCase()
+  if (baseLowerForThinking === "thinking" || baseLowerForThinking === "reasoning") {
     step.thoughtContent =
       typeof args?.thought === "string"
         ? args.thought

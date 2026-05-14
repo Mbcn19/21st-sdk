@@ -10,6 +10,7 @@ import type {
   DeleteThreadParams,
   RunThreadParams,
   RunThreadResult,
+  BackgroundRunResult,
   Thread,
   ThreadSummary,
   CreateTokenParams,
@@ -17,6 +18,13 @@ import type {
   WriteFilesParams,
   ReadFileParams,
   FileContent,
+  FileEntryInfo,
+  ListFilesParams,
+  GetFileInfoParams,
+  ExistsFileParams,
+  MakeDirParams,
+  RenameFileParams,
+  RemoveFileParams,
   ExecParams,
   ExecResult,
   GitCloneParams,
@@ -24,6 +32,17 @@ import type {
 } from "./types"
 
 const DEFAULT_BASE_URL = "https://relay.an.dev"
+
+export class VaultCoverageMissingError extends Error {
+  readonly code = "vault_coverage_missing"
+  readonly missing: string[]
+
+  constructor(message: string, missing: string[] = []) {
+    super(message)
+    this.name = "VaultCoverageMissingError"
+    this.missing = missing
+  }
+}
 
 export class AgentClient {
   private readonly apiKey: string
@@ -54,8 +73,11 @@ export class AgentClient {
     })
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({})) as { error?: ApiError }
+      const body = (await res.json().catch(() => ({}))) as { error?: ApiError }
       const msg = body.error?.message ?? `Request failed: ${res.status}`
+      if (body.error?.code === "vault_coverage_missing") {
+        throw new VaultCoverageMissingError(msg, body.error.missing ?? [])
+      }
       throw new Error(msg)
     }
 
@@ -92,26 +114,91 @@ class FilesResource {
       `/v1/sandboxes/${params.sandboxId}/files?path=${encodedPath}`,
     )
   }
+
+  async list(params: ListFilesParams): Promise<FileEntryInfo[]> {
+    const query = new URLSearchParams({ path: params.path })
+    if (params.depth !== undefined) {
+      query.set("depth", String(params.depth))
+    }
+
+    return this.client._fetch<FileEntryInfo[]>(
+      `/v1/sandboxes/${params.sandboxId}/files/list?${query.toString()}`,
+    )
+  }
+
+  async getInfo(params: GetFileInfoParams): Promise<FileEntryInfo> {
+    const encodedPath = encodeURIComponent(params.path)
+    return this.client._fetch<FileEntryInfo>(
+      `/v1/sandboxes/${params.sandboxId}/files/info?path=${encodedPath}`,
+    )
+  }
+
+  async exists(params: ExistsFileParams): Promise<boolean> {
+    const encodedPath = encodeURIComponent(params.path)
+    return this.client._fetch<boolean>(
+      `/v1/sandboxes/${params.sandboxId}/files/exists?path=${encodedPath}`,
+    )
+  }
+
+  async makeDir(params: MakeDirParams): Promise<boolean> {
+    return this.client._fetch<boolean>(
+      `/v1/sandboxes/${params.sandboxId}/files/mkdir`,
+      {
+        method: "POST",
+        body: JSON.stringify({ path: params.path }),
+      },
+    )
+  }
+
+  async rename(params: RenameFileParams): Promise<FileEntryInfo> {
+    return this.client._fetch<FileEntryInfo>(
+      `/v1/sandboxes/${params.sandboxId}/files/rename`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          oldPath: params.oldPath,
+          newPath: params.newPath,
+        }),
+      },
+    )
+  }
+
+  async remove(params: RemoveFileParams): Promise<void> {
+    const encodedPath = encodeURIComponent(params.path)
+    return this.client._fetch<void>(
+      `/v1/sandboxes/${params.sandboxId}/files?path=${encodedPath}`,
+      { method: "DELETE" },
+    )
+  }
 }
 
+/** @deprecated Use `sandboxes.exec({ sandboxId, command: 'git clone ...' })` instead. */
 class GitResource {
   constructor(private client: AgentClient) {}
 
+  /** @deprecated Use `sandboxes.exec({ sandboxId, command: 'git clone ...' })` instead. */
   async clone(params: GitCloneParams): Promise<GitCloneResult> {
-    return this.client._fetch<GitCloneResult>(`/v1/sandboxes/${params.sandboxId}/git/clone`, {
-      method: "POST",
-      body: JSON.stringify({
-        url: params.url,
-        ...(params.path && { path: params.path }),
-        ...(params.token && { token: params.token }),
-        ...(params.depth && { depth: params.depth }),
-      }),
-    })
+    console.warn(
+      "[an-sdk] sandboxes.git.clone() is deprecated and will be removed in a future release. Use sandboxes.exec() instead.",
+    )
+    return this.client._fetch<GitCloneResult>(
+      `/v1/sandboxes/${params.sandboxId}/git/clone`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          url: params.url,
+          ...(params.path && { path: params.path }),
+          ...(params.token && { token: params.token }),
+          ...(params.depth && { depth: params.depth }),
+        }),
+      },
+    )
   }
 }
 
 class SandboxesResource {
   readonly files: FilesResource
+  /** @deprecated Use `sandboxes.exec({ sandboxId, command: 'git clone ...' })` instead. */
   readonly git: GitResource
 
   constructor(private client: AgentClient) {
@@ -127,6 +214,11 @@ class SandboxesResource {
         ...(params.files && { files: params.files }),
         ...(params.envs && { envs: params.envs }),
         ...(params.setup && { setup: params.setup }),
+        ...(params.timeoutMs !== undefined && { timeoutMs: params.timeoutMs }),
+        ...(params.networkAllowOut && {
+          networkAllowOut: params.networkAllowOut,
+        }),
+        ...(params.networkDenyOut && { networkDenyOut: params.networkDenyOut }),
       }),
     })
   }
@@ -142,15 +234,18 @@ class SandboxesResource {
   }
 
   async exec(params: ExecParams): Promise<ExecResult> {
-    return this.client._fetch<ExecResult>(`/v1/sandboxes/${params.sandboxId}/exec`, {
-      method: "POST",
-      body: JSON.stringify({
-        command: params.command,
-        ...(params.cwd && { cwd: params.cwd }),
-        ...(params.envs && { envs: params.envs }),
-        ...(params.timeoutMs && { timeoutMs: params.timeoutMs }),
-      }),
-    })
+    return this.client._fetch<ExecResult>(
+      `/v1/sandboxes/${params.sandboxId}/exec`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          command: params.command,
+          ...(params.cwd && { cwd: params.cwd }),
+          ...(params.envs && { envs: params.envs }),
+          ...(params.timeoutMs && { timeoutMs: params.timeoutMs }),
+        }),
+      },
+    )
   }
 }
 
@@ -186,22 +281,64 @@ class ThreadsResource {
     )
   }
 
-  async run(params: RunThreadParams): Promise<RunThreadResult> {
+  async run(params: RunThreadParams & { mode: 'background' }): Promise<BackgroundRunResult>
+  async run(params: RunThreadParams): Promise<RunThreadResult>
+  async run(params: RunThreadParams): Promise<RunThreadResult | BackgroundRunResult> {
     if (params.threadId && !params.sandboxId) {
       throw new Error("threadId requires sandboxId")
     }
 
     const encodedAgent = encodeURIComponent(params.agent)
-    const sandboxId = params.sandboxId
-      ?? (await this.client.sandboxes.create({ agent: params.agent })).id
-    const threadId = params.threadId
-      ?? (await this.create({ sandboxId, name: params.name })).id
+    const sandboxId =
+      params.sandboxId ??
+      (await this.client.sandboxes.create({ agent: params.agent })).id
+    const threadId =
+      params.threadId ??
+      (await this.create({ sandboxId, name: params.name })).id
+    const vaultIds = normalizeVaultIds(params)
+
+    if (params.mode === "background") {
+      const response = await this.client._request(`/v1/chat/${encodedAgent}`, {
+        method: "POST",
+        body: JSON.stringify({
+          messages: params.messages,
+          sandboxId,
+          threadId,
+          mode: "background",
+          ...(vaultIds && { vaultIds }),
+          ...(params.externalUserId && { externalUserId: params.externalUserId }),
+          ...(params.options && { options: params.options }),
+        }),
+      })
+
+      // Older self-hosted relay builds may acknowledge background mode by
+      // immediately opening an SSE stream instead of returning 202 JSON.
+      // Treat that as "run started" so workflow callers can poll the thread.
+      if (response.status !== 202) {
+        void response.text().catch(() => {})
+        return { sandboxId, threadId, status: "running" as const }
+      }
+
+      const result = (await response
+        .json()
+        .catch(() => ({ status: "running" as const }))) as {
+        threadId?: string
+        sandboxId?: string
+        status?: "running"
+      }
+
+      return { sandboxId, threadId, status: result.status ?? "running" }
+    }
+
     const response = await this.client._request(`/v1/chat/${encodedAgent}`, {
       method: "POST",
       body: JSON.stringify({
         messages: params.messages,
         sandboxId,
         threadId,
+        ...(vaultIds && { vaultIds }),
+        ...(params.externalUserId && { externalUserId: params.externalUserId }),
+        ...(params.options && { options: params.options }),
       }),
     })
 
@@ -212,6 +349,36 @@ class ThreadsResource {
       resumeUrl: `${this.client._getBaseUrl()}/v1/chat/${encodedAgent}/${sandboxId}/stream`,
     }
   }
+}
+
+let didWarnVaultIdDeprecated = false
+let didWarnVaultIdIgnored = false
+
+function warnOnce(kind: "deprecated" | "ignored", message: string) {
+  if (kind === "deprecated") {
+    if (didWarnVaultIdDeprecated) return
+    didWarnVaultIdDeprecated = true
+  } else {
+    if (didWarnVaultIdIgnored) return
+    didWarnVaultIdIgnored = true
+  }
+  console.warn(message)
+}
+
+function normalizeVaultIds(params: RunThreadParams): string[] | undefined {
+  if (params.vaultIds) {
+    if (params.vaultId) {
+      warnOnce("ignored", "vaultId was ignored because vaultIds was provided")
+    }
+    return [...new Set(params.vaultIds)]
+  }
+
+  if (params.vaultId) {
+    warnOnce("deprecated", "vaultId is deprecated, use vaultIds: string[]")
+    return [params.vaultId]
+  }
+
+  return undefined
 }
 
 class TokensResource {

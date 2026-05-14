@@ -1,6 +1,6 @@
 {
   "name": "@21st-sdk/node",
-  "version": "0.0.4",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Server-side Node.js SDK for 21st Agents",
   "homepage": "https://21st.dev/agents",
@@ -45,6 +45,7 @@
     "node"
   ],
   "scripts": {
+    "prepublishOnly": "pnpm install && pnpm build",
     "prepack": "cp -r ../docs ./docs",
     "postpack": "rm -rf ./docs",
     "build": "tsup",

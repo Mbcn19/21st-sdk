@@ -34,6 +34,17 @@ export interface ChatSlots {
   AssistantMessage: React.ComponentType<any>
   ToolRenderer: React.ComponentType<any>
   MessageActions: React.ComponentType<any>
+  EmptyState: React.ComponentType
+}
+
+/** Per-invocation agent configuration options passed through to the runtime. */
+export interface AgentRequestOptions {
+  model?: string
+  systemPrompt?: string | { type: "preset"; preset: "claude_code"; append?: string }
+  maxTurns?: number
+  maxBudgetUsd?: number
+  permissionMode?: string
+  disallowedTools?: string[]
 }
 
 /** Props for createAgentChat() */

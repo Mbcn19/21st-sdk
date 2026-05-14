@@ -14,7 +14,7 @@ npm install @21st-sdk/nextjs @21st-sdk/react ai @ai-sdk/react
 
 ```env
 # .env.local
-API_KEY_21ST=an_sk_your_key_here
+API_KEY_21ST=21st_sk_your_key_here
 ```
 
 Get your API key from [the API keys page](https://21st.dev/agents/api-keys).
@@ -66,7 +66,7 @@ export default function Chat() {
 }
 ```
 
-That's it. Your `an_sk_` API key stays on the server. The client only receives short-lived JWTs.
+That's it. Your `21st_sk_` API key stays on the server. Legacy `an_sk_` keys still work. The client only receives short-lived JWTs.
 
 ## How It Works
 
@@ -75,7 +75,7 @@ Browser                     Your Next.js Server              Relay
   |                                |                            |
   |-- POST /api/agent/token ------>|                            |
   |                                |-- POST /v1/tokens -------->|
-  |                                |   (with an_sk_ key)        |
+  |                                |   (with API key)           |
   |                                |<-- { token, expiresAt } ---|
   |<-- { token, expiresAt } ------|                            |
   |                                                             |

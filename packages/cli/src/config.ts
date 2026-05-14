@@ -40,6 +40,8 @@ export function getAppBaseUrl(): string {
 }
 
 export function saveApiKey(apiKey: string): void {
-  mkdirSync(AN_DIR, { recursive: true })
-  writeFileSync(CREDENTIALS_PATH, JSON.stringify({ apiKey }, null, 2))
+  mkdirSync(AN_DIR, { recursive: true, mode: 0o700 })
+  writeFileSync(CREDENTIALS_PATH, JSON.stringify({ apiKey }, null, 2), {
+    mode: 0o600,
+  })
 }

@@ -25,7 +25,7 @@ export default function Chat() {
     () =>
       createAgentChat({
         agent: "your-agent-slug",
-        getToken: async () => "your_an_sk_token",
+        getToken: async () => "your_21st_token",
       }),
     [],
   );
@@ -130,7 +130,7 @@ Creates an AI SDK `Chat` instance pointed at the relay API.
 ```ts
 createAgentChat({
   agent: string;           // Agent slug from your dashboard
-  getToken: () => Promise<string>;  // Returns your an_sk_ API key
+  getToken: () => Promise<string>;  // Returns a short-lived token
   apiUrl?: string;         // Default: "https://relay.an.dev"
   projectId?: string;      // Session persistence key
   onFinish?: () => void;

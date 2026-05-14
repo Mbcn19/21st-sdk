@@ -46,6 +46,7 @@ export const GenericTool = memo(function GenericTool({
   isPending,
   isError,
   showIcon = false,
+  size,
 }: {
   icon?: React.ComponentType<{ className?: string }>
   title: string
@@ -54,14 +55,15 @@ export const GenericTool = memo(function GenericTool({
   isPending: boolean
   isError: boolean
   showIcon?: boolean
+  size?: ToolSize
 }) {
   const config = useThemeConfig()
-  const size = config.toolCallStyle === "compact" ? "compact" : "normal"
+  const resolvedSize = size ?? (config.toolCallStyle === "compact" ? "compact" : "normal")
   const Icon = icon
 
   return (
     <ToolRowBase
-      size={size as ToolSize}
+      size={resolvedSize as ToolSize}
       icon={showIcon && Icon ? <Icon className="w-full h-full shrink-0 text-muted-foreground" /> : showIcon ? (
         isPending
           ? <SpinnerIcon16 className="w-full h-full shrink-0 animate-spin text-muted-foreground" />

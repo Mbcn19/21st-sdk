@@ -1,5 +1,5 @@
 export interface TokenHandlerOptions {
-  /** Your an_sk_ API key — keep in process.env, never expose to client */
+  /** Your 21st_sk_ API key — keep in process.env, never expose to client */
   apiKey: string
   /** Relay URL. Default: "https://relay.an.dev" */
   relayUrl?: string
@@ -14,7 +14,7 @@ export interface ExchangeTokenOptions extends TokenHandlerOptions {
   userId?: string
 }
 
-/** Exchange an an_sk_ API key for a short-lived JWT via the relay */
+/** Exchange a 21st API key for a short-lived JWT via the relay */
 export async function exchangeToken(options: ExchangeTokenOptions) {
   const {
     apiKey,
@@ -45,7 +45,7 @@ export async function exchangeToken(options: ExchangeTokenOptions) {
   return res.json() as Promise<{ token: string; expiresAt: string }>
 }
 
-/** Create a Next.js API route handler that exchanges an_sk_ keys for JWTs */
+/** Create a Next.js API route handler that exchanges API keys for JWTs */
 export function createTokenHandler(options: TokenHandlerOptions) {
   return async function POST(req: Request) {
     try {

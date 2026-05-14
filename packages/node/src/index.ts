@@ -1,5 +1,5 @@
 // `AnClient` is a legacy re-export kept for compatibility.
-export { AgentClient, AnClient } from "./client"
+export { AgentClient, AnClient, VaultCoverageMissingError } from "./client"
 export type {
   AgentClientConfig,
   CreateSandboxParams,
@@ -20,6 +20,14 @@ export type {
   WriteFilesParams,
   ReadFileParams,
   FileContent,
+  FileType,
+  FileEntryInfo,
+  ListFilesParams,
+  GetFileInfoParams,
+  ExistsFileParams,
+  MakeDirParams,
+  RenameFileParams,
+  RemoveFileParams,
   ExecParams,
   ExecResult,
   GitCloneParams,

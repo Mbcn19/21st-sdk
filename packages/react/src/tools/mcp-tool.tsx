@@ -4,6 +4,8 @@ import { TextShimmer } from "../components/text-shimmer"
 import { getToolStatus, areToolPropsEqual } from "../utils/format-tool"
 import type { McpToolInfo } from "./tool-registry"
 import { cn } from "../utils/cn"
+import { useThemeConfig } from "../theme-config"
+import { TOOL_ROW_STYLES } from "../types/tool-styles"
 
 interface McpToolProps {
   part: any
@@ -139,6 +141,9 @@ function colorizeJson(json: string): string {
 }
 
 export const McpTool = memo(function McpTool({ part, mcpInfo, chatStatus }: McpToolProps) {
+  const config = useThemeConfig()
+  const toolSize = config.toolCallStyle === "compact" ? "compact" : "normal"
+  const s = TOOL_ROW_STYLES[toolSize]
   const [isExpanded, setIsExpanded] = useState(false)
   const { isPending, isInterrupted } = getToolStatus(part, chatStatus)
 
@@ -176,8 +181,8 @@ export const McpTool = memo(function McpTool({ part, mcpInfo, chatStatus }: McpT
 
   if (isInterrupted && !part.output) {
     return (
-      <div className="an-tool-mcp flex items-center gap-1.5 px-2 py-0.5">
-        <span className="text-xs" style={{ color: "var(--an-tool-color-muted)" }}>
+      <div className={cn("an-tool-mcp flex items-center", s.container)}>
+        <span className={s.text} style={{ color: "var(--an-tool-color-muted)" }}>
           {mcpInfo.displayName} interrupted
         </span>
       </div>
@@ -188,13 +193,13 @@ export const McpTool = memo(function McpTool({ part, mcpInfo, chatStatus }: McpT
     <div className="an-tool-mcp">
       <div
         onClick={() => hasExpandableContent && setIsExpanded(!isExpanded)}
-        className={cn("group flex items-start gap-1.5 py-0.5 px-2", hasExpandableContent && "cursor-pointer")}
+        className={cn("group flex items-start", s.container, hasExpandableContent && "cursor-pointer")}
       >
         <div className="flex-1 min-w-0 flex items-center gap-1.5">
-          <div className="text-xs flex items-center gap-1.5 min-w-0" style={{ color: "var(--an-tool-color-muted)" }}>
+          <div className={cn("flex items-center gap-1.5 min-w-0", s.text)} style={{ color: "var(--an-tool-color-muted)" }}>
             <span className="font-medium whitespace-nowrap flex-shrink-0">
               {isPending ? (
-                <TextShimmer as="span" duration={1.2} className="inline-flex items-center text-xs leading-none h-4 m-0">
+                <TextShimmer as="span" duration={1.2} className={s.shimmerClass}>
                   {title}
                 </TextShimmer>
               ) : title}
@@ -211,7 +216,8 @@ export const McpTool = memo(function McpTool({ part, mcpInfo, chatStatus }: McpT
             {hasExpandableContent && (
               <ChevronRight
                 className={cn(
-                  "w-3.5 h-3.5 transition-transform duration-200 ease-out flex-shrink-0",
+                  toolSize === "compact" ? "w-3.5 h-3.5" : "w-4 h-4",
+                  "transition-transform duration-200 ease-out flex-shrink-0",
                   isExpanded && "rotate-90",
                   !isExpanded && "opacity-0 group-hover:opacity-100",
                 )}
@@ -223,7 +229,7 @@ export const McpTool = memo(function McpTool({ part, mcpInfo, chatStatus }: McpT
 
       {isExpanded && hasExpandableContent && (
         <div
-          className="mx-2 mb-1 rounded-md overflow-hidden"
+          className="mb-1 rounded-md overflow-hidden"
           style={{ border: "1px solid var(--an-tool-border-color)", background: "var(--an-tool-background)" }}
         >
           {part.input && Object.keys(part.input).length > 0 && (

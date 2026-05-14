@@ -14,7 +14,7 @@ npm install @21st-sdk/node
 import { AgentClient } from "@21st-sdk/node"
 
 const client = new AgentClient({
-  apiKey: process.env.API_KEY_21ST!, // an_sk_...
+  apiKey: process.env.API_KEY_21ST!, // 21st_sk_...
 })
 
 // Create a sandbox for your agent
@@ -37,7 +37,7 @@ const { token, expiresAt } = await client.tokens.create({
 
 ```ts
 new AgentClient({
-  apiKey: string     // Your an_sk_ API key
+  apiKey: string     // Your 21st_sk_ API key
   baseUrl?: string   // Default: "https://relay.an.dev"
 })
 ```
@@ -51,6 +51,21 @@ new AgentClient({
 | `create({ agent })` | Create a new sandbox for an agent |
 | `get(sandboxId)` | Get sandbox details (status, threads, agent info) |
 | `delete(sandboxId)` | Delete a sandbox |
+| `exec({ sandboxId, command, cwd?, envs?, timeoutMs? })` | Run a command inside a sandbox |
+| `git.clone({ sandboxId, url, path?, token?, depth? })` | Clone a repository into a sandbox |
+
+### `client.sandboxes.files`
+
+| Method | Description |
+|--------|-------------|
+| `write({ sandboxId, files })` | Write one or more text files into a sandbox |
+| `read({ sandboxId, path })` | Read one file from a sandbox |
+| `list({ sandboxId, path, depth? })` | List files and directories under a path |
+| `getInfo({ sandboxId, path })` | Get metadata for one file or directory |
+| `exists({ sandboxId, path })` | Check whether a file or directory exists |
+| `makeDir({ sandboxId, path })` | Create a directory path, returning whether it was newly created |
+| `rename({ sandboxId, oldPath, newPath })` | Rename or move a file or directory |
+| `remove({ sandboxId, path })` | Remove a file or directory |
 
 ### `client.threads`
 

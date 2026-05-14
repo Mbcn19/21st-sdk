@@ -1,66 +1,107 @@
-import { getApiBaseUrl, getApiKey } from "./config.js"
+import {
+  requireAuth,
+  requireAgentSlug,
+  requestJson,
+} from "./api.js"
 import * as p from "@clack/prompts"
 
-const API_BASE = getApiBaseUrl()
-
-function maskValue(value: string): string {
-  if (value.length <= 4) return "\u2022".repeat(value.length)
-  return value.slice(0, 2) + "\u2022".repeat(Math.min(value.length - 4, 12)) + value.slice(-2)
+type EnvAssignment = {
+  key: string
+  value: string
 }
 
-function requireAuth(): string {
-  const apiKey = getApiKey()
-  if (!apiKey) {
-    p.log.error("Not logged in. Run `npx @21st-sdk/cli login` first, or set API_KEY_21ST.")
-    process.exit(1)
-  }
-  return apiKey
+const ENV_SET_USAGE = "npx @21st-sdk/cli env set <agent-slug> KEY VALUE"
+const ENV_SET_MULTI_USAGE = "npx @21st-sdk/cli env set <agent-slug> KEY=VALUE [KEY=VALUE ...]"
+
+async function fetchEnvKeys(apiKey: string, agentSlug: string): Promise<string[]> {
+  const data = await requestJson<{ keys?: string[] }>(
+    apiKey,
+    `/agents/${encodeURIComponent(agentSlug)}/env`,
+    { method: "GET" },
+    "Failed to fetch env vars",
+  )
+  return data.keys ?? []
 }
 
-function requireAgentSlug(args: string[]): string {
-  const slug = args[0]
-  if (!slug || slug.startsWith("-")) {
-    p.log.error("Agent slug is required. Usage: npx @21st-sdk/cli env list <agent-slug>")
-    process.exit(1)
-  }
-  return slug
-}
-
-async function fetchEnvVars(apiKey: string, agentSlug: string): Promise<Record<string, string>> {
-  const res = await fetch(`${API_BASE}/agents/${agentSlug}/env`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error((err as any).message || `Failed to fetch env vars (${res.status})`)
-  }
-  const data = await res.json()
-  return data.envVars ?? {}
-}
-
-async function putEnvVars(apiKey: string, agentSlug: string, envVars: Record<string, string> | null): Promise<void> {
-  const res = await fetch(`${API_BASE}/agents/${agentSlug}/env`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+async function setEnvVar(apiKey: string, agentSlug: string, key: string, value: string): Promise<void> {
+  await requestJson(
+    apiKey,
+    `/agents/${encodeURIComponent(agentSlug)}/env`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value }),
     },
-    body: JSON.stringify({ envVars }),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error((err as any).message || `Failed to update env vars (${res.status})`)
+    "Failed to set env var",
+  )
+}
+
+async function removeEnvVar(apiKey: string, agentSlug: string, key: string): Promise<void> {
+  await requestJson(
+    apiKey,
+    `/agents/${encodeURIComponent(agentSlug)}/env`,
+    {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    },
+    "Failed to remove env var",
+  )
+}
+
+function exitEnvSetUsage(message?: string): never {
+  if (message) {
+    p.log.error(message)
   }
+  console.log("Usage:")
+  console.log(`  ${ENV_SET_USAGE}`)
+  console.log(`  ${ENV_SET_MULTI_USAGE}`)
+  process.exit(1)
+}
+
+function parseEnvAssignments(args: string[]): EnvAssignment[] {
+  const envArgs = args.slice(1)
+
+  if (envArgs.length === 0) {
+    exitEnvSetUsage()
+  }
+
+  if (!envArgs[0].includes("=")) {
+    const key = envArgs[0]
+    const value = envArgs.slice(1).join(" ")
+
+    if (!key || value.length === 0) {
+      exitEnvSetUsage()
+    }
+
+    return [{ key, value }]
+  }
+
+  const assignments: EnvAssignment[] = []
+  for (const arg of envArgs) {
+    const separatorIndex = arg.indexOf("=")
+    const key = separatorIndex === -1 ? "" : arg.slice(0, separatorIndex)
+    const value = separatorIndex === -1 ? "" : arg.slice(separatorIndex + 1)
+
+    if (!key || value.length === 0) {
+      exitEnvSetUsage("When using KEY=VALUE syntax, every env var must be passed as its own KEY=VALUE argument.")
+    }
+
+    assignments.push({ key, value })
+  }
+
+  return assignments
 }
 
 export async function envList(args: string[]) {
   const apiKey = requireAuth()
-  const agentSlug = requireAgentSlug(args)
-  const showValues = args.includes("--show-values")
+  const agentSlug = requireAgentSlug(args, "env list <agent-slug>")
+  const spinner = p.spinner()
 
   try {
-    const vars = await fetchEnvVars(apiKey, agentSlug)
-    const keys = Object.keys(vars)
+    spinner.start(`Fetching environment variables for ${agentSlug}...`)
+    const keys = await fetchEnvKeys(apiKey, agentSlug)
+    spinner.stop(`Fetched environment variables for ${agentSlug}`)
 
     if (keys.length === 0) {
       p.log.info("No environment variables set.")
@@ -69,12 +110,12 @@ export async function envList(args: string[]) {
 
     console.log()
     for (const key of keys) {
-      const display = showValues ? vars[key] : maskValue(vars[key]!)
-      console.log(`  ${key}=${display}`)
+      console.log(`  ${key}`)
     }
     console.log()
     p.log.info(`${keys.length} variable${keys.length !== 1 ? "s" : ""}`)
   } catch (err: any) {
+    spinner.stop(`Failed to fetch environment variables for ${agentSlug}`)
     p.log.error(err.message)
     process.exit(1)
   }
@@ -82,28 +123,19 @@ export async function envList(args: string[]) {
 
 export async function envSet(args: string[]) {
   const apiKey = requireAuth()
-  const agentSlug = requireAgentSlug(args)
-
-  const key = args[1]
-  const value = args.slice(2).join(" ")
-
-  if (!key || !value) {
-    p.log.error("Usage: npx @21st-sdk/cli env set <agent-slug> KEY VALUE")
-    process.exit(1)
-  }
-
-  if (!/^[A-Z0-9_]+$/.test(key)) {
-    p.log.error("Invalid key. Use uppercase letters, numbers, and underscores only.")
-    process.exit(1)
-  }
+  const agentSlug = requireAgentSlug(args, "env set <agent-slug> KEY VALUE | KEY=VALUE [KEY=VALUE ...]")
+  const assignments = parseEnvAssignments(args)
+  const spinner = p.spinner()
+  const targetLabel = assignments.length === 1 ? assignments[0].key : `${assignments.length} env vars`
 
   try {
-    const vars = await fetchEnvVars(apiKey, agentSlug)
-    const existed = key in vars
-    vars[key] = value
-    await putEnvVars(apiKey, agentSlug, vars)
-    p.log.success(existed ? `Updated ${key}` : `Set ${key}`)
+    spinner.start(`Updating ${targetLabel} for ${agentSlug}...`)
+    for (const assignment of assignments) {
+      await setEnvVar(apiKey, agentSlug, assignment.key, assignment.value)
+    }
+    spinner.stop(`Saved ${targetLabel} for ${agentSlug}.`)
   } catch (err: any) {
+    spinner.stop(`Failed to update ${targetLabel} for ${agentSlug}`)
     p.log.error(err.message)
     process.exit(1)
   }
@@ -111,25 +143,26 @@ export async function envSet(args: string[]) {
 
 export async function envRemove(args: string[]) {
   const apiKey = requireAuth()
-  const agentSlug = requireAgentSlug(args)
+  const agentSlug = requireAgentSlug(args, "env remove <agent-slug> KEY")
 
   const key = args[1]
+  const spinner = p.spinner()
   if (!key) {
     p.log.error("Usage: npx @21st-sdk/cli env remove <agent-slug> KEY")
     process.exit(1)
   }
 
   try {
-    const vars = await fetchEnvVars(apiKey, agentSlug)
-    if (!(key in vars)) {
-      p.log.info(`${key} not found`)
+    spinner.start(`Removing ${key} from ${agentSlug}...`)
+    const keys = await fetchEnvKeys(apiKey, agentSlug)
+    if (!keys.includes(key)) {
+      spinner.stop(`${key} not found in ${agentSlug}`)
       return
     }
-    delete vars[key]
-    const envVars = Object.keys(vars).length > 0 ? vars : null
-    await putEnvVars(apiKey, agentSlug, envVars)
-    p.log.success(`Removed ${key}`)
+    await removeEnvVar(apiKey, agentSlug, key)
+    spinner.stop(`Removed ${key} from ${agentSlug}`)
   } catch (err: any) {
+    spinner.stop(`Failed to remove ${key} from ${agentSlug}`)
     p.log.error(err.message)
     process.exit(1)
   }

@@ -117,6 +117,58 @@ class FilesResource:
             "/v1/sandboxes/%s/files?path=%s" % (sandbox_id, encoded_path),
         )
 
+    def list(
+        self,
+        sandbox_id: str,
+        path: str,
+        *,
+        depth: Optional[int] = None,
+    ) -> Any:
+        query = "path=%s" % quote(path, safe="")
+        if depth is not None:
+            query += "&depth=%s" % depth
+
+        return self.client._fetch(
+            "/v1/sandboxes/%s/files/list?%s" % (sandbox_id, query),
+        )
+
+    def get_info(self, sandbox_id: str, path: str) -> Any:
+        encoded_path = quote(path, safe="")
+        return self.client._fetch(
+            "/v1/sandboxes/%s/files/info?path=%s" % (sandbox_id, encoded_path),
+        )
+
+    def exists(self, sandbox_id: str, path: str) -> bool:
+        encoded_path = quote(path, safe="")
+        return bool(
+            self.client._fetch(
+                "/v1/sandboxes/%s/files/exists?path=%s" % (sandbox_id, encoded_path),
+            )
+        )
+
+    def make_dir(self, sandbox_id: str, path: str) -> bool:
+        return bool(
+            self.client._fetch(
+                "/v1/sandboxes/%s/files/mkdir" % sandbox_id,
+                method="POST",
+                body={"path": path},
+            )
+        )
+
+    def rename(self, sandbox_id: str, old_path: str, new_path: str) -> Any:
+        return self.client._fetch(
+            "/v1/sandboxes/%s/files/rename" % sandbox_id,
+            method="POST",
+            body={"oldPath": old_path, "newPath": new_path},
+        )
+
+    def remove(self, sandbox_id: str, path: str) -> None:
+        encoded_path = quote(path, safe="")
+        self.client._fetch(
+            "/v1/sandboxes/%s/files?path=%s" % (sandbox_id, encoded_path),
+            method="DELETE",
+        )
+
 
 class GitResource:
     def __init__(self, client: AgentClient):
@@ -159,6 +211,9 @@ class SandboxesResource:
         files: Optional[Mapping[str, str]] = None,
         envs: Optional[Mapping[str, str]] = None,
         setup: Optional[Sequence[str]] = None,
+        timeout_ms: Optional[int] = None,
+        network_allow_out: Optional[Sequence[str]] = None,
+        network_deny_out: Optional[Sequence[str]] = None,
     ) -> Any:
         body: Dict[str, Any] = {"agent": agent}
         if files:
@@ -167,6 +222,12 @@ class SandboxesResource:
             body["envs"] = dict(envs)
         if setup:
             body["setup"] = list(setup)
+        if timeout_ms is not None:
+            body["timeoutMs"] = timeout_ms
+        if network_allow_out is not None:
+            body["networkAllowOut"] = list(network_allow_out)
+        if network_deny_out is not None:
+            body["networkDenyOut"] = list(network_deny_out)
 
         return self.client._fetch("/v1/sandboxes", method="POST", body=body)
 
@@ -237,6 +298,7 @@ class ThreadsResource:
         sandbox_id: Optional[str] = None,
         thread_id: Optional[str] = None,
         name: Optional[str] = None,
+        options: Optional[Dict[str, Any]] = None,
     ) -> Any:
         if thread_id and not sandbox_id:
             raise AgentClientError("threadId requires sandboxId")
@@ -248,14 +310,18 @@ class ThreadsResource:
             thread_id = self.create(sandbox_id, name=name).id
 
         encoded_agent = quote(agent, safe="")
+        body: Dict[str, Any] = {
+            "messages": list(messages),
+            "sandboxId": sandbox_id,
+            "threadId": thread_id,
+        }
+        if options:
+            body["options"] = options
+
         response = self.client._request(
             "/v1/chat/%s" % encoded_agent,
             method="POST",
-            body={
-                "messages": list(messages),
-                "sandboxId": sandbox_id,
-                "threadId": thread_id,
-            },
+            body=body,
             stream=True,
         )
 

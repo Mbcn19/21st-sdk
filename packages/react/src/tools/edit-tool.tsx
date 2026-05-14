@@ -30,7 +30,7 @@ export function EditToolDiffCard({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border bg-muted/50 overflow-hidden mx-2 my-0.5"
+      className="rounded-lg border border-border bg-muted/30 overflow-hidden my-0.5"
     >
       <div className="flex items-center justify-between pl-2.5 pr-2 h-7">
         <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
@@ -40,8 +40,8 @@ export function EditToolDiffCard({
               {actionLabel} {fileName}
             </TextShimmer>
           ) : (
-            <span className="text-xs text-foreground/40 truncate">
-              {actionLabel} <span className="text-foreground/60">{fileName}</span>
+            <span className="text-xs text-muted-foreground truncate">
+              {actionLabel} <span>{fileName}</span>
             </span>
           )}
         </div>
@@ -49,10 +49,10 @@ export function EditToolDiffCard({
           {step.diffStats && !isPending && (
             <span className="text-[10px] font-mono">
               {step.diffStats.includes("+") && (
-                <span className="text-green-400/70">{step.diffStats.split(" ")[0]}</span>
+                <span className="text-green-600 dark:text-green-400">{step.diffStats.split(" ")[0]}</span>
               )}
               {step.diffStats.includes("-") && (
-                <span className="text-red-400/70 ml-1">{step.diffStats.split(" ").find((s: string) => s.startsWith("-"))}</span>
+                <span className="text-red-600 dark:text-red-400 ml-1">{step.diffStats.split(" ").find((s: string) => s.startsWith("-"))}</span>
               )}
             </span>
           )}
@@ -64,16 +64,16 @@ export function EditToolDiffCard({
         </div>
       </div>
       {step.diffLines && step.diffLines.length > 0 && (
-        <div className="border-t border-foreground/[0.04] font-mono text-[10px] leading-[18px] max-h-[72px] overflow-hidden">
+        <div className="border-t border-border font-mono text-[10px] leading-[18px] max-h-[72px] overflow-y-auto overscroll-contain">
           {step.diffLines.map((line, i) => (
             <div
               key={i}
               className={`px-2.5 ${
                 line.type === "add"
-                  ? "bg-green-500/[0.06] border-l-2 border-green-500/30 text-green-700/50 dark:text-green-300/50"
+                  ? "bg-green-500/10 dark:bg-green-500/15 border-l-2 border-green-500/50 text-green-700 dark:text-green-300"
                   : line.type === "remove"
-                    ? "bg-red-500/[0.06] border-l-2 border-red-500/30 text-red-700/50 dark:text-red-300/50"
-                    : "border-l-2 border-transparent text-foreground/20"
+                    ? "bg-red-500/10 dark:bg-red-500/15 border-l-2 border-red-500/50 text-red-700 dark:text-red-300"
+                    : "border-l-2 border-transparent text-muted-foreground"
               }`}
             >
               <span className="select-none opacity-50 mr-2">{line.type === "add" ? "+" : line.type === "remove" ? "-" : " "}</span>

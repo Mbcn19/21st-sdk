@@ -22,7 +22,7 @@ export default function Chat() {
   const chat = useMemo(
     () => createAgentChat({
       agent: "your-agent-slug",
-      getToken: async () => "your_an_sk_token",
+      getToken: async () => "your_21st_token",
     }),
     [],
   )
@@ -50,9 +50,11 @@ Creates an AI SDK `Chat` instance pointed at the AN Relay.
 ```ts
 createAgentChat({
   agent: string              // Agent slug from dashboard
-  getToken: () => Promise<string>  // Returns an_sk_ key or JWT
+  tokenUrl?: string          // POST endpoint that returns { token }
+  getToken?: () => Promise<string>  // Or custom token function
   apiUrl?: string            // Default: "https://relay.an.dev"
-  projectId?: string         // Session persistence key
+  sandboxId?: string         // Persistent sandbox environment ID
+  threadId?: string          // Conversation thread within sandbox
   onFinish?: () => void
   onError?: (error: Error) => void
 })
@@ -70,11 +72,15 @@ For Next.js apps, use `tokenUrl` instead of `getToken` — see [Next.js Integrat
 | `onStop` | `() => void` | Stop generation |
 | `error` | `Error` | Error to display |
 | `theme` | `ChatTheme` | Theme from playground |
-| `colorMode` | `"light" \| "dark" \| "auto"` | Color mode |
+| `colorMode` | `"light" \| "dark" \| "auto"` | Color mode (default: `"auto"`) |
 | `classNames` | `Partial<ChatClassNames>` | Per-element CSS overrides |
 | `slots` | `Partial<ChatSlots>` | Component swapping |
+| `toolRenderers` | `Record<string, ComponentType>` | Custom tool renderers by name |
+| `showWindowChrome` | `boolean` | Show window chrome header |
+| `modelSelector` | `object` | Model selector configuration |
+| `modeSelector` | `object` | Mode selector configuration |
+| `attachments` | `object` | Attachment configuration |
 | `className` | `string` | Root element class |
-| `style` | `CSSProperties` | Root element style |
 
 ## Customization
 

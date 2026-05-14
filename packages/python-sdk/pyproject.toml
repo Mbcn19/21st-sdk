@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "21st-sdk"
-version = "0.0.1"
+version = "0.0.5"
 description = "Server-side Python SDK for 21st Agents"
 readme = "README.md"
 requires-python = ">=3.9"

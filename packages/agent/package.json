@@ -1,6 +1,6 @@
 {
   "name": "@21st-sdk/agent",
-  "version": "0.0.6",
+  "version": "0.0.18",
   "license": "MIT",
   "description": "Define AI agents and tools with full type inference for 21st Agents",
   "homepage": "https://21st.dev/agents",
@@ -46,6 +46,7 @@
     "codex"
   ],
   "scripts": {
+    "prepublishOnly": "pnpm install && pnpm build",
     "prepack": "cp -r ../docs ./docs",
     "postpack": "rm -rf ./docs",
     "build": "tsup",
@@ -54,6 +55,9 @@
   },
   "peerDependencies": {
     "zod": ">=3.24"
+  },
+  "dependencies": {
+    "@21st-sdk/node": "workspace:^"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

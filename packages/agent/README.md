@@ -49,7 +49,8 @@ export default agent({
   // Model to use (default: "claude-sonnet-4-6")
   model: "claude-sonnet-4-6",
 
-  // System prompt for the agent
+  // For "claude-code" runtime, string prompts are appended
+  // to Claude Code's preset system prompt by default.
   systemPrompt: "You are a PR reviewer...",
 
   // Custom tools the agent can use
@@ -136,6 +137,17 @@ onFinish: async ({ result }) => {
 
 Your code runs in a secure cloud sandbox with full access to Node.js, git, and system tools.
 
+For `runtime: "claude-code"`, omitting `systemPrompt` uses Claude Code's default preset system prompt. If you pass a string, it is appended to that preset automatically. You can also pass the preset object directly:
+
+```ts
+systemPrompt: {
+  type: "preset",
+  preset: "claude_code",
+  append: "Your extra instructions here",
+}
+```
+
 ## License
 
 MIT
+

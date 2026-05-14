@@ -16,7 +16,7 @@ export default {
         background: withOpacity("--an-background"),
         foreground: withOpacity("--an-foreground"),
         muted: {
-          DEFAULT: withOpacity("--an-foreground-muted"),
+          DEFAULT: withOpacity("--an-background-secondary"),
           foreground: withOpacity("--an-foreground-muted"),
         },
         accent: {

@@ -34,6 +34,10 @@ const codeTheme: Record<string, React.CSSProperties> = {
     lineHeight: "1.5",
     tabSize: 2,
   },
+  // Base style for all unstyled tokens — ensures text is always visible on dark code bg
+  plain: {
+    color: "var(--an-code-color, #d4d4d4)",
+  },
   comment: { color: "#8b949e" },
   punctuation: { color: "#e6edf3" },
   property: { color: "#79c0ff" },
