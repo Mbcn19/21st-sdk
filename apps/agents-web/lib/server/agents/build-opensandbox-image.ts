@@ -46,6 +46,11 @@ type KubernetesToleration = {
   tolerationSeconds?: number
 }
 
+type KubernetesResourceRequirements = {
+  requests?: Record<string, string>
+  limits?: Record<string, string>
+}
+
 type ExternalTokenCache = {
   token: string
   expiresAtMs: number
@@ -68,7 +73,7 @@ const SERVICE_ACCOUNT_CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/c
 const DEFAULT_NAMESPACE = "opensandbox"
 const DEFAULT_BUILDER_IMAGE = "gcr.io/kaniko-project/executor:v1.24.0"
 const DEFAULT_SERVICE_ACCOUNT = "opensandbox-image-builder"
-const DEFAULT_BUILD_TIMEOUT_MS = 15 * 60 * 1000
+const DEFAULT_BUILD_TIMEOUT_MS = 30 * 60 * 1000
 const DEFAULT_BUILD_NODE_SELECTOR: Record<string, string> = {
   workload: "sandbox",
 }
@@ -80,6 +85,16 @@ const DEFAULT_BUILD_TOLERATIONS: KubernetesToleration[] = [
     effect: "NoSchedule",
   },
 ]
+const DEFAULT_BUILD_RESOURCES: KubernetesResourceRequirements = {
+  requests: {
+    cpu: "500m",
+    memory: "1Gi",
+  },
+  limits: {
+    cpu: "2",
+    memory: "4Gi",
+  },
+}
 
 let cachedExternalToken: ExternalTokenCache = null
 
@@ -124,6 +139,13 @@ function getBuilderTolerations() {
   return parseJsonEnv<KubernetesToleration[]>(
     "OPENSANDBOX_BUILD_TOLERATIONS_JSON",
     DEFAULT_BUILD_TOLERATIONS,
+  )
+}
+
+function getBuilderResources() {
+  return parseJsonEnv<KubernetesResourceRequirements>(
+    "OPENSANDBOX_BUILD_RESOURCES_JSON",
+    DEFAULT_BUILD_RESOURCES,
   )
 }
 
@@ -464,6 +486,7 @@ function buildJob(params: {
                   mountPath: "/workspace",
                 },
               ],
+              resources: getBuilderResources(),
             },
           ],
           volumes: [

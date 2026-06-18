@@ -1,7 +1,45 @@
 import { prisma } from "@/lib/prisma"
 import { GitHubIntegration } from "@/lib/github"
 import { TRPCError } from "@trpc/server"
-import { nanoid } from "nanoid"
+import { randomUUID } from "node:crypto"
+import { customAlphabet, nanoid } from "nanoid"
+
+/** Fixed-length lowercase tail for slug collision fallback. */
+const slugTail = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6)
+
+// Same slugify pattern the other routers keep file-local.
+function slugifyTeamHandle(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
+
+/**
+ * Picks a globally unique team slug: tries the slugified base, then
+ * `base-NNN` with random 3-digit suffixes, then random 6-char tails
+ * (degenerate bases like "personal-projects" have most numeric suffixes
+ * taken by the 2026-04-30 backfill). The partial unique index
+ * `teams_slug_unique` is the backstop for the tiny check-to-insert race.
+ */
+export async function generateUniqueTeamSlug(text: string): Promise<string> {
+  const base = slugifyTeamHandle(text) || "team"
+  let candidate = base
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const taken = await prisma.team.findFirst({
+      where: { slug: candidate },
+      select: { id: true },
+    })
+    if (!taken) return candidate
+    candidate =
+      attempt < 3
+        ? `${base}-${Math.floor(100 + Math.random() * 900)}`
+        : `${base}-${slugTail()}`
+  }
+  // All checked candidates taken (astronomically unlikely) — fall back to a
+  // UUID tail: an ugly slug beats a failed team creation.
+  return `${base}-${randomUUID()}`
+}
 
 /**
  * Verifies team exists and user is the owner. Throws if not found or unauthorized.

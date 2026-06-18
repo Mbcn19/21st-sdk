@@ -35,6 +35,29 @@ data "aws_iam_policy_document" "app_eks_access" {
   }
 }
 
+data "aws_iam_policy_document" "workflow_skill_artifacts_bucket" {
+  statement {
+    sid = "AllowClusterReadThroughS3Endpoint"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = ["s3:GetObject"]
+
+    resources = [
+      "${aws_s3_bucket.workflow_skill_artifacts.arn}/${var.workflow_skills_s3_prefix}/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceVpce"
+      values   = [aws_vpc_endpoint.s3.id]
+    }
+  }
+}
+
 locals {
   azs = slice(data.aws_availability_zones.available.names, 0, 2)
 
@@ -361,6 +384,49 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.this.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.public.id]
+
+  tags = merge(local.tags, {
+    Name = "${var.name_prefix}-s3"
+  })
+}
+
+resource "aws_s3_bucket" "workflow_skill_artifacts" {
+  bucket = "${var.name_prefix}-workflow-skill-artifacts"
+
+  tags = merge(local.tags, {
+    Name = "${var.name_prefix}-workflow-skill-artifacts"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "workflow_skill_artifacts" {
+  bucket = aws_s3_bucket.workflow_skill_artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "workflow_skill_artifacts" {
+  bucket = aws_s3_bucket.workflow_skill_artifacts.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "workflow_skill_artifacts" {
+  bucket = aws_s3_bucket.workflow_skill_artifacts.id
+  policy = data.aws_iam_policy_document.workflow_skill_artifacts_bucket.json
 }
 
 resource "aws_security_group" "app" {

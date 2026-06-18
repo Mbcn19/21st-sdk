@@ -118,6 +118,11 @@ variable "opensandbox_runtime_ecr_repository_name" {
   default = "21st-agent-runtime-opensandbox"
 }
 
+variable "workflow_skills_s3_prefix" {
+  type    = string
+  default = "workflow-skills"
+}
+
 variable "sandbox_runtime_prepull_enabled" {
   type    = bool
   default = true

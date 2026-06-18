@@ -117,7 +117,9 @@ type ProgressReporter = (message: string) => void
 
 const NDJSON_CONTENT_TYPE = "application/x-ndjson"
 
-export const maxDuration = 900
+// Vercel Pro caps serverless maxDuration at 800s — the previous value of 900
+// made every production deploy of agents-web fail at the patchBuild step.
+export const maxDuration = 800
 
 function encodeEvent(event: DeployEvent): Uint8Array {
   return new TextEncoder().encode(`${JSON.stringify(event)}\n`)

@@ -35,6 +35,14 @@ output "opensandbox_runtime_cache_ecr_repository_name" {
   value = aws_ecr_repository.opensandbox_runtime_cache.name
 }
 
+output "workflow_skill_artifacts_bucket" {
+  value = aws_s3_bucket.workflow_skill_artifacts.bucket
+}
+
+output "workflow_skill_artifacts_url_base" {
+  value = "https://${aws_s3_bucket.workflow_skill_artifacts.bucket}.s3.${var.aws_region}.amazonaws.com"
+}
+
 output "opensandbox_runtime_image_example" {
   value = "${aws_ecr_repository.opensandbox_runtime.repository_url}:dev"
 }

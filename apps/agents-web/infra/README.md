@@ -13,6 +13,7 @@ Terraform for the current `agents-web` stack with an `EKS`-based sandbox plane.
 - one self-managed sandbox node autoscaling group
 - one encrypted `EFS` filesystem for persistent sandbox volumes
 - one private `ECR` repository for the OpenSandbox runtime image
+- one private `S3` bucket for workflow skill artifacts, readable through the stack S3 VPC endpoint
 - one private PostgreSQL `RDS` instance
 - one private Redis `ElastiCache` instance
 - one Elastic IP for the app VM
@@ -55,6 +56,7 @@ Terraform now prepares the AWS base for:
   - `opensandbox-image-builder` RBAC for deploy-time derived runtime image builds
   - `opensandbox-server-internal` service
 - ECR push permissions for sandbox worker nodes to publish derived OpenSandbox runtime images
+- a private workflow skill artifact bucket plus an S3 Gateway VPC Endpoint on the public route table used by current sandbox nodes
 - outputs for the future OpenSandbox server config
 
 Terraform does **not** yet:
@@ -94,6 +96,12 @@ repository and grants the sandbox EKS node role push/pull permissions on both
 the runtime repository and the cache repository. Without this, final derived
 image pushes still work, but cache layer pushes fail and every build re-runs
 expensive `apt` / `mise install` layers.
+
+Workflow skill archive URLs are normal S3 object URLs under
+`terraform output workflow_skill_artifacts_url_base`, but the bucket policy only
+allows `GetObject` through this stack's S3 Gateway VPC Endpoint. They are meant
+for OpenSandbox/EKS image builders inside this AWS contour, not for public
+internet downloads.
 
 ## Current OpenSandbox Runtime Base Image
 

@@ -18,6 +18,7 @@ import {
   requireTeamOwnership,
   checkTeamAccess,
   getOrCreateInviteLink,
+  generateUniqueTeamSlug,
 } from "./utils"
 
 export const teamsRouter = createTRPCRouter({
@@ -159,9 +160,24 @@ export const teamsRouter = createTRPCRouter({
         })
       }
 
+      // Default personal teams are also created lazily through createTeam —
+      // keep the `<username>-team` handle convention for them, same as the
+      // apps/web Clerk webhook. Plain `slugify(name)` would collide into
+      // the ugly `personal-projects-NNN` space.
+      let slugSource = input.name
+      if (input.name === "Personal Projects") {
+        const owner = await prisma.user.findUnique({
+          where: { id: ctx.auth.userId },
+          select: { username: true },
+        })
+        if (owner?.username) slugSource = `${owner.username}-team`
+      }
+      const slug = await generateUniqueTeamSlug(slugSource)
+
       const team = await prisma.team.create({
         data: {
           name: input.name,
+          slug,
           description: input.description,
           image_url: input.image_url,
           website_url: input.website_url,

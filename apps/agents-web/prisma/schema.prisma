@@ -958,6 +958,7 @@ model UserFollow {
 model Team {
     id                           String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
     name                         String
+    slug                         String?                 @unique
     description                  String?
     image_url                    String?
     website_url                  String?
